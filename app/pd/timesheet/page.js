@@ -3,145 +3,136 @@ import { useMemo, useState } from 'react';
 import { useStore } from '../../../lib/StoreContext';
 import { useAuth } from '../../../lib/AuthContext';
 import DataGate from '../../../components/DataGate';
-import TimesheetCalendar from '../../../components/TimesheetCalendar';
 import TimesheetModal from '../../../components/TimesheetModal';
-import { LEAVE_TYPE_LABEL_TH } from '../../../lib/schemas';
 
-const MONTH_NAMES = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-  'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+const MONTH_NAMES = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+const WEEKDAYS = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
 
-function todayStr() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+function toISO(d) {
+  const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
+function todayISO() { return toISO(new Date()); }
 
-function formatThaiDate(dateStr) {
-  if (!dateStr) return '';
-  const [y, m, d] = dateStr.split('-').map(Number);
-  return `${d} ${MONTH_NAMES[m - 1]} ${y}`;
-}
-
-export default function Page() {
-  const { data, addRow, updateRow, deleteRow, confirm } = useStore();
-  const { perms } = useAuth();
-  const now = new Date();
-
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth());
-  const [selectedDate, setSelectedDate] = useState(todayStr());
-  const [modalState, setModalState] = useState(null); // { row: null|object, presetDate }
-
-  const entries = data.timesheets || [];
-  const projects = data.projects || [];
-  const projectName = (id) => projects.find(p => p.id === id)?.name || '—';
-
-  const dayEntries = useMemo(
-    () => entries
-      .filter(e => e.date === selectedDate)
-      .sort((a, b) => (a.timeIn || '').localeCompare(b.timeIn || '')),
-    [entries, selectedDate]
-  );
-
-  function navigate(delta) {
-    if (delta === 0) {
-      const t = new Date();
-      setYear(t.getFullYear());
-      setMonth(t.getMonth());
-      setSelectedDate(todayStr());
-      return;
-    }
-    let m = month + delta;
-    let y = year;
-    if (m < 0) { m = 11; y -= 1; } else if (m > 11) { m = 0; y += 1; }
-    setMonth(m);
-    setYear(y);
-  }
-
-  function openAdd(dateStr) { setModalState({ row: null, presetDate: dateStr || selectedDate }); }
-  function openEdit(row) { setModalState({ row, presetDate: row.date }); }
-  function closeModal() { setModalState(null); }
-
-  async function handleSave(values) {
-    if (modalState.row) await updateRow('timesheets', modalState.row.id, values);
-    else await addRow('timesheets', values);
-    setModalState(null);
-  }
-
-  function handleDelete(id) {
-    confirm('ลบรายการนี้?', 'การลบจะไม่สามารถกู้คืนได้', async () => {
-      await deleteRow('timesheets', id);
-      setModalState(null);
-    });
-  }
-
+export default function TimesheetPage() {
   return (
     <>
-      <div className="topbar">
-        <span className="topbar-title">PD Task · Timesheet</span>
-        <div className="topbar-actions">
-          <button className="btn btn-primary" onClick={() => openAdd(selectedDate)}>＋ บันทึกเวลา</button>
-        </div>
-      </div>
-      <div className="content">
-        <DataGate>
-          <div className="project-page">
-            <TimesheetCalendar
-              year={year}
-              month={month}
-              entries={entries}
-              selectedDate={selectedDate}
-              onNavigate={navigate}
-              onSelectDay={setSelectedDate}
-            />
-
-            <div className="ts-day-panel">
-              <div className="ts-day-panel-header">
-                <span className="ts-day-panel-title">{formatThaiDate(selectedDate)}</span>
-                <button className="btn btn-ghost ts-day-add-btn" onClick={() => openAdd(selectedDate)}>＋ เพิ่มรายการ</button>
-              </div>
-
-              {dayEntries.length === 0 ? (
-                <div className="empty-state" style={{ padding: '20px 0' }}>ยังไม่มีรายการในวันนี้</div>
-              ) : (
-                <div className="ts-day-list">
-                  {dayEntries.map(e => (
-                    <div key={e.id} className="ts-day-item" onClick={() => openEdit(e)}>
-                      {e.entryType === 'leave' ? (
-                        <>
-                          <span className={`ts-pill ${e.leaveType === 'Sick Leave' ? 'ts-pill-sick' : e.leaveType === 'Personal Leave' ? 'ts-pill-personal' : 'ts-pill-annual'}`}>
-                            {LEAVE_TYPE_LABEL_TH[e.leaveType] || e.leaveType}
-                          </span>
-                          <span className="ts-day-item-detail">{e.leaveReason}</span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="ts-pill ts-pill-attend">
-                            {(e.timeIn || '—').slice(0, 5)}–{(e.timeOut || '—').slice(0, 5)}
-                          </span>
-                          <span className="ts-day-item-detail">
-                            {projectName(e.projectId)}{e.workDetail ? ` · ${e.workDetail}` : ''}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </DataGate>
-      </div>
-
-      <TimesheetModal
-        open={!!modalState}
-        row={modalState?.row}
-        presetDate={modalState?.presetDate}
-        projects={projects}
-        canDelete={perms.canDelete}
-        onClose={closeModal}
-        onSave={handleSave}
-        onDelete={handleDelete}
-      />
+      <div className="topbar"><span className="topbar-title">PD Task · Timesheet</span></div>
+      <div className="content"><DataGate><Body /></DataGate></div>
     </>
+  );
+}
+
+function Body() {
+  const { data } = useStore();
+  const { session } = useAuth();
+  const today = new Date();
+  const [view, setView] = useState({ year: today.getFullYear(), month: today.getMonth() });
+  const [selectedDate, setSelectedDate] = useState(todayISO());
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editEntry, setEditEntry] = useState(null);
+
+  const myEntries = useMemo(
+    () => (data.timesheets || []).filter(t => t.userId === session?.user?.id),
+    [data.timesheets, session]
+  );
+
+  const byDate = useMemo(() => {
+    const map = {};
+    myEntries.forEach(e => { (map[e.date] ||= []).push(e); });
+    return map;
+  }, [myEntries]);
+
+  const cells = useMemo(() => {
+    const { year, month } = view;
+    const firstWeekday = new Date(year, month, 1).getDay();
+    const list = [];
+    for (let i = 0; i < 42; i++) {
+      const d = new Date(year, month, 1 - firstWeekday + i);
+      list.push({ date: d, iso: toISO(d), inMonth: d.getMonth() === month });
+    }
+    return list;
+  }, [view]);
+
+  function prevMonth() { setView(v => (v.month === 0 ? { year: v.year - 1, month: 11 } : { year: v.year, month: v.month - 1 })); }
+  function nextMonth() { setView(v => (v.month === 11 ? { year: v.year + 1, month: 0 } : { year: v.year, month: v.month + 1 })); }
+  function goToday() { setView({ year: today.getFullYear(), month: today.getMonth() }); setSelectedDate(todayISO()); }
+
+  function openAddFor(iso) { setEditEntry(null); setSelectedDate(iso); setModalOpen(true); }
+  function openEdit(entry) { setEditEntry(entry); setModalOpen(true); }
+
+  const selectedEntries = byDate[selectedDate] || [];
+
+  return (
+    <div className="project-page">
+      <div className="tscal-header">
+        <div className="tscal-nav">
+          <button onClick={prevMonth}>‹</button>
+          <span className="tscal-month-label">{MONTH_NAMES[view.month]} {view.year + 543}</span>
+          <button onClick={nextMonth}>›</button>
+          <button style={{ width: 'auto', padding: '0 10px', fontSize: 12 }} onClick={goToday}>วันนี้</button>
+        </div>
+        <button className="btn btn-primary" onClick={() => openAddFor(selectedDate)}>＋ บันทึกเวลา</button>
+      </div>
+
+      <div className="tscal-grid">
+        {WEEKDAYS.map(w => <div key={w} className="tscal-weekday">{w}</div>)}
+        {cells.map(c => {
+          const entries = byDate[c.iso] || [];
+          const workEntries = entries.filter(e => e.entryType !== 'leave');
+          const leaveEntries = entries.filter(e => e.entryType === 'leave');
+          const isToday = c.iso === todayISO();
+          const isSelected = c.iso === selectedDate;
+          return (
+            <div
+              key={c.iso}
+              className={`tscal-cell ${!c.inMonth ? 'outside' : ''} ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}`}
+              onClick={() => c.inMonth && setSelectedDate(c.iso)}
+            >
+              <div className="tscal-daynum">{c.date.getDate()}</div>
+              {workEntries.slice(0, 1).map(e => (
+                <div key={e.id} className="tscal-pill work">🟢 {e.timeIn || ''}{e.timeIn && e.timeOut ? '-' : ''}{e.timeOut || ''}</div>
+              ))}
+              {leaveEntries.slice(0, 1).map(e => (
+                <div key={e.id} className="tscal-pill leave">🌴 {e.leaveType || 'ลา'}</div>
+              ))}
+              {entries.length > 2 && <div className="tscal-more">+{entries.length - 2} เพิ่มเติม</div>}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="ts-detail-panel">
+        <div className="ts-detail-title">
+          <span>รายการวันที่ {selectedDate}</span>
+          <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => openAddFor(selectedDate)}>＋ เพิ่มรายการ</button>
+        </div>
+        {!selectedEntries.length ? (
+          <div style={{ fontSize: 13, color: 'var(--text3)', padding: '10px 0' }}>ยังไม่มีรายการในวันนี้</div>
+        ) : selectedEntries.map(e => {
+          const project = (data.projects || []).find(p => p.id === e.projectId);
+          return (
+            <div key={e.id} className="ts-detail-item">
+              <div>
+                {e.entryType === 'leave' ? (
+                  <>
+                    <div className="ts-detail-item-main">🌴 {e.leaveType}</div>
+                    {e.reason && <div className="ts-detail-item-sub">{e.reason}</div>}
+                  </>
+                ) : (
+                  <>
+                    <div className="ts-detail-item-main">🟢 {e.timeIn || '-'} – {e.timeOut || '-'} · {project ? project.name : 'Non-Project'}</div>
+                    {e.workDetail && <div className="ts-detail-item-sub">{e.workDetail}</div>}
+                  </>
+                )}
+              </div>
+              <button className="task-action-btn" onClick={() => openEdit(e)}>✎</button>
+            </div>
+          );
+        })}
+      </div>
+
+      <TimesheetModal open={modalOpen} onClose={() => setModalOpen(false)} entry={editEntry} presetDate={selectedDate} />
+    </div>
   );
 }
