@@ -67,4 +67,3 @@ project's settings, then deploy — no other config needed.
   Edge Function that calls the OpenProject API server-side.
 - Every entity keeps its original field names (Thai labels included) so nothing
   was lost in translation.
-# PD_task
