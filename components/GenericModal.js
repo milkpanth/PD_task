@@ -5,6 +5,15 @@ import { useStore } from '../lib/StoreContext';
 import { useAuth } from '../lib/AuthContext';
 import { SCHEMAS } from '../lib/schemas';
 
+function nextAutoId(rows, key, prefix, pad) {
+  let max = 0;
+  rows.forEach(r => {
+    const m = String(r[key] || '').match(new RegExp(`^${prefix}(\\d+)$`));
+    if (m) max = Math.max(max, parseInt(m[1], 10));
+  });
+  return prefix + String(max + 1).padStart(pad, '0');
+}
+
 export default function GenericModal() {
   const { genericModal, closeGenericModal, data, saveGeneric, deleteGeneric } = useStore();
   const { perms } = useAuth();
@@ -20,9 +29,18 @@ export default function GenericModal() {
   useEffect(() => {
     if (!open) return;
     const base = {};
-    schema.fields.forEach(f => { base[f.key] = (row ? row[f.key] : genericModal.presets?.[f.key]) || ''; });
+    schema.fields.forEach(f => {
+      if (f.type === 'autoId' && !row) {
+        const scoped = schema.global
+          ? (data[schema.table] || [])
+          : (data[schema.table] || []).filter(r => r.project === genericModal.projectId);
+        base[f.key] = nextAutoId(scoped, f.key, f.prefix || '', f.pad || 3);
+      } else {
+        base[f.key] = (row ? row[f.key] : genericModal.presets?.[f.key]) || '';
+      }
+    });
     setValues(base);
-  }, [open, genericModal, row, schema]);
+  }, [open, genericModal, row, schema, data]);
 
   if (!open) return null;
 
@@ -65,6 +83,9 @@ export default function GenericModal() {
                 <option value="">— เลือก Project —</option>
                 {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
+            )}
+            {f.type === 'autoId' && (
+              <input type="text" className="form-input" value={values[f.key] || ''} disabled style={{ opacity: 0.7, cursor: 'not-allowed' }} />
             )}
             {f.type === 'text' && (
               <input type="text" className="form-input" value={values[f.key] || ''} onChange={e => setField(f.key, e.target.value)} />

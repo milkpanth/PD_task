@@ -185,6 +185,29 @@ create table if not exists defects (
   "createdAt" timestamptz default now()
 );
 
+-- ── Change Log (Project tab) ─────────────────────────────────────
+-- "changeId" (CR001, CR002, ...) is auto-generated client-side per
+-- project when a new entry is created — not enforced unique at the DB
+-- level, since numbering restarts per project.
+create table if not exists "changeLog" (
+  id uuid primary key default gen_random_uuid(),
+  project uuid references projects(id) on delete cascade,
+  "changeId" text default '',
+  "changeDetail" text default '',
+  "changeType" text default '',
+  "impactAnalysis" text default '',
+  "reqRef" text default '',
+  status text default 'Open',
+  "changeBy" text default '',
+  "changeDate" date,
+  "approvedBy" text default '',
+  "dateApproved" date,
+  "targetRelease" text default '',
+  "productVersion" text default '',
+  remarks text default '',
+  "createdAt" timestamptz default now()
+);
+
 -- ── PD Task module (global, not tied to a single project) ─────────
 create table if not exists "pdTasks" (
   id uuid primary key default gen_random_uuid(),
@@ -236,19 +259,19 @@ create table if not exists "timesheets" (
   "timeOut" time,
   "projectId" uuid references projects(id) on delete set null,
   "workDetail" text default '',
-  -- 'attendance' = ลงเวลาเข้า-ออกงานปกติ, 'leave' = ลา
-  "entryType" text not null default 'attendance',
-  -- ใช้เมื่อ entryType = 'leave' — ค่า: 'Annual Leave' | 'Sick Leave' | 'Personal Leave'
-  "leaveType" text,
-  "leaveReason" text default '',
+  "entryType" text default 'work', -- 'work' | 'leave'
+  "leaveType" text default '', -- 'Annual Leave' | 'Sick Leave' | 'Personal Leave'
+  reason text default '',
+  "userId" uuid references auth.users(id) on delete set null,
+  "userEmail" text default '',
   "createdAt" timestamptz default now()
 );
-
--- Existing databases created before this column set was added: run this
--- block once in the Supabase SQL editor to bring an older table up to date.
-alter table "timesheets" add column if not exists "entryType" text not null default 'attendance';
-alter table "timesheets" add column if not exists "leaveType" text;
-alter table "timesheets" add column if not exists "leaveReason" text default '';
+-- Migration for existing databases (adds leave-request + owner tracking):
+-- alter table "timesheets" add column if not exists "entryType" text default 'work';
+-- alter table "timesheets" add column if not exists "leaveType" text default '';
+-- alter table "timesheets" add column if not exists reason text default '';
+-- alter table "timesheets" add column if not exists "userId" uuid references auth.users(id) on delete set null;
+-- alter table "timesheets" add column if not exists "userEmail" text default '';
 
 -- ── Row Level Security ──────────────────────────────────────────
 -- Enabled with permissive policies so the app works immediately with the
@@ -258,7 +281,7 @@ do $$
 declare t text;
 begin
   for t in select unnest(array['projects','tasks','products','devTasks','wbs',
-    'requirements','sprints','members','defects','pdTasks','pdIssues','pdBacklog','pdFeedback','timesheets'])
+    'requirements','sprints','members','defects','changeLog','pdTasks','pdIssues','pdBacklog','pdFeedback','timesheets'])
   loop
     execute format('alter table %I enable row level security;', t);
     execute format('drop policy if exists "allow all" on %I;', t);

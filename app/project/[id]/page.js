@@ -15,6 +15,7 @@ const TABS = [
   { key: 'sprint', icon: '🏁', label: 'Sprint' },
   { key: 'member', icon: '👥', label: 'Member' },
   { key: 'defect', icon: '🐞', label: 'Defect' },
+  { key: 'changelog', icon: '🔀', label: 'Change Log' },
 ];
 
 const STATUS_LABEL = { active: 'กำลังดำเนินการ', hold: 'รอดำเนินการ', done: 'เสร็จสิ้น' };
@@ -97,6 +98,7 @@ function Body({ id, tab, setTab, router }) {
       {tab === 'sprint' && <GenericTab type="sprint" projectId={id} label="Sprint" />}
       {tab === 'member' && <GenericTab type="member" projectId={id} label="Member" />}
       {tab === 'defect' && <GenericTab type="defect" projectId={id} label="Defect" />}
+      {tab === 'changelog' && <GenericTab type="changelog" projectId={id} label="Change Log" />}
     </div>
   );
 }

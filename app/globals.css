@@ -115,6 +115,36 @@ input, textarea, select { font: inherit; }
   .mini-cal-day.has-task::after{content:'';position:absolute;bottom:1px;left:50%;transform:translateX(-50%);width:3px;height:3px;border-radius:50%;background:var(--orange);}
   .mini-cal-day.other-month{color:var(--text3);opacity:0.4;}
 
+  /* TIMESHEET CALENDAR */
+  .tscal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+  .tscal-nav{display:flex;align-items:center;gap:10px;}
+  .tscal-nav button{background:var(--surface3);border:1px solid var(--border);color:var(--text2);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:13px;}
+  .tscal-nav button:hover{border-color:var(--accent);color:var(--accent);}
+  .tscal-month-label{font-family:var(--font-display);font-weight:700;font-size:16px;min-width:150px;text-align:center;}
+  .tscal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+  .tscal-weekday{text-align:center;font-size:11px;color:var(--text3);font-weight:700;padding-bottom:6px;}
+  .tscal-cell{min-height:88px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px;background:var(--surface2);cursor:pointer;display:flex;flex-direction:column;gap:3px;transition:border-color .15s;}
+  .tscal-cell:hover{border-color:var(--accent);}
+  .tscal-cell.today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset;}
+  .tscal-cell.selected{background:var(--surface3);}
+  .tscal-cell.outside{opacity:0.3;cursor:default;pointer-events:none;}
+  .tscal-daynum{font-size:12px;font-weight:700;color:var(--text2);}
+  .tscal-pill{font-size:10px;padding:2px 6px;border-radius:20px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .tscal-pill.work{background:rgba(74,222,128,0.15);color:var(--green);}
+  .tscal-pill.leave{background:rgba(251,146,60,0.15);color:var(--orange);}
+  .tscal-more{font-size:10px;color:var(--text3);}
+
+  .ts-detail-panel{margin-top:22px;border-top:1px solid var(--border);padding-top:16px;}
+  .ts-detail-title{font-weight:700;font-size:14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+  .ts-detail-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;}
+  .ts-detail-item-main{font-size:13px;}
+  .ts-detail-item-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+
+  .ts-type-tabs{display:flex;gap:8px;margin-bottom:18px;}
+  .ts-type-tab{flex:1;text-align:center;padding:10px;border-radius:var(--radius-sm);border:1px solid var(--border);cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);background:var(--surface2);}
+  .ts-type-tab.active.work{border-color:var(--green);color:var(--green);background:rgba(74,222,128,0.1);}
+  .ts-type-tab.active.leave{border-color:var(--orange);color:var(--orange);background:rgba(251,146,60,0.1);}
+
   /* TASKS */
   .tasks-page{padding:0;}
   .task-filters{display:flex;align-items:center;gap:8px;padding:14px 24px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:5;flex-wrap:wrap;}
@@ -378,79 +408,3 @@ input, textarea, select { font: inherit; }
   .multiselect-opt input{cursor:pointer;}
   .multiselect-empty{padding:12px;font-size:12px;color:var(--text3);text-align:center;}
   .project-chip{display:inline-flex;align-items:center;font-size:11px;padding:2px 8px;border-radius:20px;background:var(--surface3);color:var(--text2);margin:2px 4px 2px 0;}
-
-  /* TIMESHEET — calendar + day panel + leave/attendance modal */
-    /* TIMESHEET CALENDAR */
-  .tscal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
-  .tscal-nav{display:flex;align-items:center;gap:10px;}
-  .tscal-nav button{background:var(--surface3);border:1px solid var(--border);color:var(--text2);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:13px;}
-  .tscal-nav button:hover{border-color:var(--accent);color:var(--accent);}
-  .tscal-month-label{font-family:var(--font-display);font-weight:700;font-size:16px;min-width:150px;text-align:center;}
-  .tscal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
-  .tscal-weekday{text-align:center;font-size:11px;color:var(--text3);font-weight:700;padding-bottom:6px;}
-  .tscal-cell{min-height:88px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px;background:var(--surface2);cursor:pointer;display:flex;flex-direction:column;gap:3px;transition:border-color .15s;}
-  .tscal-cell:hover{border-color:var(--accent);}
-  .tscal-cell.today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset;}
-  .tscal-cell.selected{background:var(--surface3);}
-  .tscal-cell.outside{opacity:0.3;cursor:default;pointer-events:none;}
-  .tscal-daynum{font-size:12px;font-weight:700;color:var(--text2);}
-  .tscal-pill{font-size:10px;padding:2px 6px;border-radius:20px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .tscal-pill.work{background:rgba(74,222,128,0.15);color:var(--green);}
-  .tscal-pill.leave{background:rgba(251,146,60,0.15);color:var(--orange);}
-  .tscal-more{font-size:10px;color:var(--text3);}
-
-  .ts-detail-panel{margin-top:22px;border-top:1px solid var(--border);padding-top:16px;}
-  .ts-detail-title{font-weight:700;font-size:14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
-  .ts-detail-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;}
-  .ts-detail-item-main{font-size:13px;}
-  .ts-detail-item-sub{font-size:11px;color:var(--text3);margin-top:2px;}
-
-  .ts-type-tabs{display:flex;gap:8px;margin-bottom:18px;}
-  .ts-type-tab{flex:1;text-align:center;padding:10px;border-radius:var(--radius-sm);border:1px solid var(--border);cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);background:var(--surface2);}
-  .ts-type-tab.active.work{border-color:var(--green);color:var(--green);background:rgba(74,222,128,0.1);}
-  .ts-type-tab.active.leave{border-color:var(--orange);color:var(--orange);background:rgba(251,146,60,0.1);}
-  .ts-calendar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px 18px;margin-bottom:14px;}
-  .ts-cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-  .ts-cal-title{font-family:var(--font-display);font-weight:700;font-size:15px;color:var(--text);}
-  .ts-cal-nav{display:flex;align-items:center;gap:6px;}
-  .ts-cal-nav-btn{padding:5px 11px;font-size:13px;line-height:1;}
-  .ts-cal-today-btn{padding:5px 12px;font-size:12px;}
-  .ts-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
-  .ts-cal-grid-head{margin-bottom:6px;}
-  .ts-cal-day-name{font-size:11px;color:var(--text3);text-align:center;padding:2px 0;font-weight:600;}
-  .ts-cal-cell{min-height:76px;border-radius:var(--radius-sm);border:1px solid transparent;padding:6px 6px 5px;cursor:pointer;transition:all 0.15s;background:var(--surface2);display:flex;flex-direction:column;gap:4px;}
-  .ts-cal-cell:hover{border-color:var(--border);background:var(--surface3);}
-  .ts-cal-cell.other-month{opacity:0.35;cursor:default;}
-  .ts-cal-cell.other-month:hover{border-color:transparent;background:var(--surface2);}
-  .ts-cal-cell.today .ts-cal-daynum{background:var(--accent);color:#fff;}
-  .ts-cal-cell.selected{border-color:var(--accent);background:rgba(28,58,99,0.12);}
-  .ts-cal-daynum{font-size:12px;color:var(--text2);width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:600;}
-  .ts-cal-pills{display:flex;flex-direction:column;gap:3px;}
-
-  .ts-pill{font-size:10px;font-weight:600;padding:2px 6px;border-radius:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;}
-  .ts-pill-attend{background:rgba(74,222,128,0.15);color:var(--green);}
-  .ts-pill-annual{background:rgba(34,211,238,0.15);color:var(--cyan);}
-  .ts-pill-sick{background:rgba(226,67,76,0.15);color:var(--red);}
-  .ts-pill-personal{background:rgba(244,114,182,0.15);color:var(--pink);}
-  .ts-pill-more{background:var(--surface3);color:var(--text3);}
-
-  .ts-day-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;}
-  .ts-day-panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
-  .ts-day-panel-title{font-family:var(--font-display);font-weight:700;font-size:13.5px;color:var(--text);}
-  .ts-day-add-btn{padding:5px 12px;font-size:12px;}
-  .ts-day-list{display:flex;flex-direction:column;gap:6px;}
-  .ts-day-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--radius-sm);border:1px solid var(--border);cursor:pointer;transition:all 0.15s;}
-  .ts-day-item:hover{background:var(--surface2);border-color:var(--accent);}
-  .ts-day-item-detail{font-size:12.5px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-
-  .seg-toggle{display:flex;gap:6px;background:var(--surface2);padding:4px;border-radius:10px;margin-bottom:16px;}
-  .seg-btn{flex:1;text-align:center;padding:8px 10px;border-radius:7px;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;transition:all 0.15s;user-select:none;}
-  .seg-btn:hover{color:var(--text);}
-  .seg-btn.active.attendance{background:rgba(74,222,128,0.15);color:var(--green);}
-  .seg-btn.active.leave{background:rgba(251,146,60,0.15);color:var(--orange);}
-
-  .ts-leave-chips{display:flex;gap:8px;flex-wrap:wrap;}
-  .form-error{font-size:11px;color:var(--red);margin-top:5px;}
-
-    .modal-section-title{font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text3);margin:22px 0 12px;padding-top:14px;border-top:1px solid var(--border);}
-  .modal-section-title:first-of-type{margin-top:0;padding-top:0;border-top:none;}
