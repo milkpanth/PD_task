@@ -1,11 +1,13 @@
 'use client';
 import { useMemo, useState } from 'react';
 import { useStore } from '../../../lib/StoreContext';
-import { ROLE_CONFIG } from '../../../lib/AuthContext';
 import DataGate from '../../../components/DataGate';
 
 const MONTH_NAMES = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
 const WORK_DAY_HOURS = 8;
+// Dashboard headcount/KPIs are scoped to the PD team itself — not every
+// role that merely has access to the PD Task section (e.g. Super Admin, CTO).
+const PD_HEADCOUNT_ROLES = ['PD Manager', 'PD Team'];
 
 function toISO(d) {
   const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0');
@@ -66,11 +68,15 @@ function Body() {
   const kpi = useMemo(() => {
     const { year, month } = view;
     const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
-    const monthEntries = (data.timesheets || []).filter(t => t.date && t.date.slice(0, 7) === monthKey);
-
-    // "PD" headcount = accounts whose role can access the PD Task section.
-    const pdEmployees = (data.profiles || []).filter(p => ROLE_CONFIG[p.role]?.canAccessPD);
+    // "PD" headcount = only PD Manager / PD Team accounts (excludes Super Admin, CTO, etc.
+    // even though those roles can also access this section).
+    const pdEmployees = (data.profiles || []).filter(p => PD_HEADCOUNT_ROLES.includes(p.role));
     const pdEmployeeIds = new Set(pdEmployees.map(p => p.id));
+
+    // All KPIs on this dashboard reflect PD Manager / PD Team only.
+    const monthEntries = (data.timesheets || []).filter(t =>
+      t.date && t.date.slice(0, 7) === monthKey && t.userId && pdEmployeeIds.has(t.userId)
+    );
 
     const workEntries = monthEntries.filter(t => t.entryType !== 'leave');
     const leaveEntries = monthEntries.filter(t => t.entryType === 'leave');
@@ -80,7 +86,7 @@ function Body() {
     const nonProjectHrs = totalWorkingHrs - projectHrs;
     const leaveHrs = leaveEntries.length * WORK_DAY_HOURS;
 
-    const employeesWithEntries = new Set(monthEntries.map(t => t.userId).filter(Boolean));
+    const employeesWithEntries = new Set(monthEntries.map(t => t.userId));
     const totalEmployees = employeesWithEntries.size;
 
     const projectAllocation = totalWorkingHrs > 0 ? (projectHrs / totalWorkingHrs) * 100 : 0;
