@@ -80,10 +80,23 @@ input, textarea, select { font: inherit; }
   .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
   .stat-card.c1::before{background:var(--accent);}.stat-card.c2::before{background:var(--green);}
   .stat-card.c3::before{background:var(--yellow);}.stat-card.c4::before{background:var(--cyan);}
+  .stat-card.c5::before{background:var(--blue2);}.stat-card.c6::before{background:var(--pink);}
+  .stat-card.c7::before{background:var(--orange);}.stat-card.c8::before{background:var(--red);}
   .stat-label{font-size:12px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;}
   .stat-value{font-family:var(--font-display);font-size:28px;font-weight:800;color:var(--text);line-height:1;}
   .stat-sub{font-size:12px;color:var(--text3);margin-top:4px;}
   .stat-icon{position:absolute;top:16px;right:16px;font-size:22px;opacity:0.3;}
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+  .kpi-grid .stat-card{padding:16px;}
+  .kpi-grid .stat-value{font-size:24px;}
+  .kpi-bar{height:5px;background:var(--surface3);border-radius:3px;overflow:hidden;margin-top:8px;}
+  .kpi-bar-fill{height:100%;border-radius:3px;transition:width 0.5s ease;}
+  .dash-section-title{font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin:24px 0 10px;}
+  .dash-month-nav{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+  .dash-month-nav button{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text2);width:30px;height:30px;cursor:pointer;}
+  .dash-month-nav button:hover{border-color:var(--accent);color:var(--accent);}
+  .dash-month-nav .dash-month-label{font-family:var(--font-display);font-weight:700;font-size:15px;min-width:150px;text-align:center;}
+  .dash-month-nav .btn{width:auto;padding:0 12px;height:30px;font-size:12px;}
   .dashboard-grid{display:grid;grid-template-columns:1fr 340px;gap:16px;}
   .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
   .card-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--border);}
