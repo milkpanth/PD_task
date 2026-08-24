@@ -71,8 +71,7 @@ export default function AccountModal({ open, onClose, account }) {
       <Modal open={open} onClose={onClose} width="480px">
         <div className="modal-title">✅ สร้างบัญชีแล้ว</div>
         <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 14, lineHeight: 1.6 }}>
-          แจ้ง Email และรหัสผ่านชั่วคราวนี้ให้ผู้ใช้เพื่อเข้าสู่ระบบ — ระบบยังไม่มีฟีเจอร์เปลี่ยนรหัสผ่านด้วยตัวเอง
-          ผู้ใช้ล็อกอินได้ด้วยรหัสผ่านนี้จนกว่าจะถูกรีเซ็ต
+          แจ้ง Email และรหัสผ่านชั่วคราวนี้ให้ผู้ใช้เพื่อเข้าสู่ระบบ — ผู้ใช้สามารถเปลี่ยนรหัสผ่านได้เองผ่านเมนู &quot;🔑 เปลี่ยนรหัสผ่าน&quot; ที่ Sidebar
         </p>
         <div className="form-group">
           <label className="form-label">Email</label>

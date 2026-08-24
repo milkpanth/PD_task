@@ -1,8 +1,10 @@
 'use client';
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useStore } from '../lib/StoreContext';
 import { useAuth } from '../lib/AuthContext';
+import ChangePasswordModal from './ChangePasswordModal';
 
 const OVERALL = [
   { href: '/', icon: '⬡', label: 'Dashboard' },
@@ -32,6 +34,7 @@ export default function Sidebar() {
   const router = useRouter();
   const { data, confirm, deleteRow, toast } = useStore();
   const { perms, assignedProjectIds, role, session, logout } = useAuth();
+  const [changePwOpen, setChangePwOpen] = useState(false);
   const allProjects = data.projects || [];
   const projects = perms.projectScope === 'all'
     ? allProjects
@@ -140,11 +143,13 @@ export default function Sidebar() {
           <div className="sidebar-user">
             <div className="sidebar-user-email" title={session.user.email}>{session.user.email}</div>
             {role && <div className="sidebar-user-role">{role}</div>}
-            <button className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center', marginTop: 8, fontSize: 12 }} onClick={logout}>ออกจากระบบ</button>
+            <button className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center', marginTop: 8, fontSize: 12 }} onClick={() => setChangePwOpen(true)}>🔑 เปลี่ยนรหัสผ่าน</button>
+            <button className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center', marginTop: 4, fontSize: 12 }} onClick={logout}>ออกจากระบบ</button>
           </div>
         )}
         <div style={{ fontSize: 11, color: 'var(--text3)', textAlign: 'center', marginTop: 10 }}>TaskFlow v2.0 (Next.js + Supabase)</div>
       </div>
+      <ChangePasswordModal open={changePwOpen} onClose={() => setChangePwOpen(false)} />
     </div>
   );
 }
