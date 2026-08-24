@@ -14,6 +14,19 @@ function toISO(d) {
 }
 function todayISO() { return toISO(new Date()); }
 
+/** Extract short display name from email: "somchai.p@company.com" → "Somchai P." */
+function shortName(email) {
+  if (!email) return '??';
+  const local = email.split('@')[0]; // e.g. "somchai.p" or "somchai_p"
+  const parts = local.split(/[._-]/);
+  if (parts.length >= 2) {
+    const first = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+    const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase() + '.';
+    return `${first} ${lastInitial}`;
+  }
+  return local.charAt(0).toUpperCase() + local.slice(1);
+}
+
 export default function TimesheetPage() {
   return (
     <>
@@ -31,17 +44,28 @@ function Body() {
   const [selectedDate, setSelectedDate] = useState(todayISO());
   const [modalOpen, setModalOpen] = useState(false);
   const [editEntry, setEditEntry] = useState(null);
+  const [viewOnly, setViewOnly] = useState(false);
 
-  const myEntries = useMemo(
-    () => (data.timesheets || []).filter(t => t.userId === session?.user?.id),
-    [data.timesheets, session]
+  const currentUserId = session?.user?.id;
+
+  // Show ALL team entries (not just self) so everyone can see each other's schedule
+  const allEntries = useMemo(
+    () => (data.timesheets || []).filter(t => t.userId),
+    [data.timesheets]
   );
+
+  // Build a lookup: userId → email (for display names)
+  const profileMap = useMemo(() => {
+    const map = {};
+    (data.profiles || []).forEach(p => { map[p.id] = p; });
+    return map;
+  }, [data.profiles]);
 
   const byDate = useMemo(() => {
     const map = {};
-    myEntries.forEach(e => { (map[e.date] ||= []).push(e); });
+    allEntries.forEach(e => { (map[e.date] ||= []).push(e); });
     return map;
-  }, [myEntries]);
+  }, [allEntries]);
 
   const cells = useMemo(() => {
     const { year, month } = view;
@@ -58,8 +82,13 @@ function Body() {
   function nextMonth() { setView(v => (v.month === 11 ? { year: v.year + 1, month: 0 } : { year: v.year, month: v.month + 1 })); }
   function goToday() { setView({ year: today.getFullYear(), month: today.getMonth() }); setSelectedDate(todayISO()); }
 
-  function openAddFor(iso) { setEditEntry(null); setSelectedDate(iso); setModalOpen(true); }
-  function openEdit(entry) { setEditEntry(entry); setModalOpen(true); }
+  function openAddFor(iso) { setEditEntry(null); setViewOnly(false); setSelectedDate(iso); setModalOpen(true); }
+  function openEntry(entry) {
+    const isOwner = entry.userId === currentUserId;
+    setEditEntry(entry);
+    setViewOnly(!isOwner);
+    setModalOpen(true);
+  }
 
   const selectedEntries = byDate[selectedDate] || [];
 
@@ -79,10 +108,20 @@ function Body() {
         {WEEKDAYS.map(w => <div key={w} className="tscal-weekday">{w}</div>)}
         {cells.map(c => {
           const entries = byDate[c.iso] || [];
-          const workEntries = entries.filter(e => e.entryType !== 'leave');
-          const leaveEntries = entries.filter(e => e.entryType === 'leave');
           const isToday = c.iso === todayISO();
           const isSelected = c.iso === selectedDate;
+          // Group entries by person for a compact display
+          const peopleSummary = [];
+          const seen = new Set();
+          entries.forEach(e => {
+            if (seen.has(e.userId)) return;
+            seen.add(e.userId);
+            const profile = profileMap[e.userId];
+            const name = shortName(profile?.email || e.userEmail);
+            const isLeave = e.entryType === 'leave';
+            peopleSummary.push({ name, isLeave, userId: e.userId });
+          });
+
           return (
             <div
               key={c.iso}
@@ -90,13 +129,12 @@ function Body() {
               onClick={() => c.inMonth && setSelectedDate(c.iso)}
             >
               <div className="tscal-daynum">{c.date.getDate()}</div>
-              {workEntries.slice(0, 1).map(e => (
-                <div key={e.id} className="tscal-pill work">🟢 {e.timeIn || ''}{e.timeIn && e.timeOut ? '-' : ''}{e.timeOut || ''}</div>
+              {peopleSummary.slice(0, 3).map(p => (
+                <div key={p.userId} className={`tscal-pill ${p.isLeave ? 'leave' : 'work'}`}>
+                  {p.isLeave ? '🌴' : '🟢'} {p.name}
+                </div>
               ))}
-              {leaveEntries.slice(0, 1).map(e => (
-                <div key={e.id} className="tscal-pill leave">🌴 {e.leaveType || 'ลา'}</div>
-              ))}
-              {entries.length > 2 && <div className="tscal-more">+{entries.length - 2} เพิ่มเติม</div>}
+              {peopleSummary.length > 3 && <div className="tscal-more">+{peopleSummary.length - 3} คน</div>}
             </div>
           );
         })}
@@ -111,9 +149,15 @@ function Body() {
           <div style={{ fontSize: 13, color: 'var(--text3)', padding: '10px 0' }}>ยังไม่มีรายการในวันนี้</div>
         ) : selectedEntries.map(e => {
           const project = (data.projects || []).find(p => p.id === e.projectId);
+          const profile = profileMap[e.userId];
+          const name = shortName(profile?.email || e.userEmail);
+          const isOwner = e.userId === currentUserId;
           return (
-            <div key={e.id} className="ts-detail-item">
-              <div>
+            <div key={e.id} className="ts-detail-item" style={{ cursor: 'pointer' }} onClick={() => openEntry(e)}>
+              <div style={{ flex: 1 }}>
+                <div className="ts-detail-item-owner" style={{ fontSize: 11, fontWeight: 600, color: isOwner ? 'var(--accent)' : 'var(--text2)', marginBottom: 2 }}>
+                  {name} {isOwner && <span style={{ fontSize: 10, opacity: 0.7 }}>(ฉัน)</span>}
+                </div>
                 {e.entryType === 'leave' ? (
                   <>
                     <div className="ts-detail-item-main">🌴 {e.leaveType}</div>
@@ -126,13 +170,13 @@ function Body() {
                   </>
                 )}
               </div>
-              <button className="task-action-btn" onClick={() => openEdit(e)}>✎</button>
+              {isOwner && <button className="task-action-btn" onClick={(ev) => { ev.stopPropagation(); openEntry(e); }}>✎</button>}
             </div>
           );
         })}
       </div>
 
-      <TimesheetModal open={modalOpen} onClose={() => setModalOpen(false)} entry={editEntry} presetDate={selectedDate} />
+      <TimesheetModal open={modalOpen} onClose={() => setModalOpen(false)} entry={editEntry} presetDate={selectedDate} viewOnly={viewOnly} />
     </div>
   );
 }
