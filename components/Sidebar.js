@@ -44,6 +44,7 @@ export default function Sidebar() {
 
   function delProject(e, p) {
     e.stopPropagation();
+    e.preventDefault();
     confirm('ลบ Project นี้?', `ลบ "${p.name}" — งานที่เกี่ยวข้องบางส่วนอาจถูกลบตามไปด้วย`, async () => {
       await deleteRow('projects', p.id);
       toast('🗑️ ลบ project แล้ว');
