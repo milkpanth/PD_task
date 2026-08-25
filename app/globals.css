@@ -16,7 +16,7 @@ input, textarea, select { font: inherit; }
     ถ้าไม่มี จะ fallback ไปที่ IBM Plex Sans Thai ซึ่งเป็นฟอนต์ไทยที่หน้าตาใกล้เคียงกันและฟรี 100%
   */
   :root {
-    --bg:#0d0d0f;--surface:#16161a;--surface2:#1e1e24;--surface3:#26262e;
+    --bg:#003d66;--surface:#004a7a;--surface2:#00578f;--surface3:#006FBA;
     --border:#2e2e38;--text:#f0eff6;--text2:#9898ac;--text3:#5a5a72;
     --accent:#1c3a63;--accent2:#14294a;--blue:#3b82f6;--blue2:#2563eb;
     --green:#4ade80;--yellow:#facc15;--red:#e2434c;--orange:#fb923c;
