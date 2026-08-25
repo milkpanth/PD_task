@@ -19,6 +19,7 @@ const PD = [
   { href: '/pd/issuelog', icon: '⚑', label: 'Issue Log', badgeKey: 'pdIssues' },
   { href: '/pd/backlog', icon: '▥', label: 'Backlog' },
   { href: '/pd/feedback', icon: '✉', label: 'Product Feedback' },
+  { href: '/pd/mom', icon: '📝', label: 'MoM' },
   { href: '/pd/timesheet', icon: '🕒', label: 'Timesheet' },
 ];
 
