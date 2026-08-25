@@ -112,10 +112,20 @@ function Body() {
       return { id: p.id, email: p.email, role: p.role, working: w, project: pj, nonProject: w - pj, leave: lv, missingDays };
     }).sort((a, b) => b.missingDays - a.missingDays || b.working - a.working);
 
+    // Per-project hours breakdown
+    const projectHrsMap = {};
+    workEntries.filter(t => t.projectId).forEach(t => {
+      const hrs = hoursBetween(t.timeIn, t.timeOut);
+      projectHrsMap[t.projectId] = (projectHrsMap[t.projectId] || 0) + hrs;
+    });
+    const perProject = Object.entries(projectHrsMap)
+      .map(([projectId, hrs]) => ({ projectId, hrs, pct: totalWorkingHrs > 0 ? (hrs / totalWorkingHrs) * 100 : 0 }))
+      .sort((a, b) => b.hrs - a.hrs);
+
     return {
       totalEmployees, totalWorkingHrs, projectHrs, nonProjectHrs, projectAllocation,
       utilization, leaveHrs, missingTimesheet, pdEmployeeCount: pdEmployees.length,
-      elapsedWorkingDaysCount: elapsedWorkingDays.length, perEmployee,
+      elapsedWorkingDaysCount: elapsedWorkingDays.length, perEmployee, perProject,
     };
   }, [data.timesheets, data.profiles, view]);
 
@@ -215,6 +225,53 @@ function Body() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </>
+      )}
+
+      {kpi.perProject.length > 0 && (
+        <>
+          <div className="dash-section-title">เวลาที่ใช้แต่ละ Project — {MONTH_NAMES[view.month]} {view.year + 543}</div>
+          <div className="donut-section">
+            <div className="donut-chart-wrap">
+              <svg viewBox="0 0 36 36" className="donut-svg">
+                {(() => {
+                  const COLORS = ['#06b6d4','#f59e0b','#10b981','#8b5cf6','#ef4444','#ec4899','#6366f1','#14b8a6'];
+                  let offset = 0;
+                  const nonProjectPct = kpi.totalWorkingHrs > 0 ? (kpi.nonProjectHrs / kpi.totalWorkingHrs) * 100 : 0;
+                  const slices = [...kpi.perProject.map((p, i) => ({ ...p, color: COLORS[i % COLORS.length] }))];
+                  if (nonProjectPct > 0) slices.push({ projectId: '__non', pct: nonProjectPct, hrs: kpi.nonProjectHrs, color: '#64748b' });
+                  return slices.map((s, i) => {
+                    const dash = `${s.pct} ${100 - s.pct}`;
+                    const el = <circle key={i} cx="18" cy="18" r="15.9155" fill="none" stroke={s.color} strokeWidth="3.5" strokeDasharray={dash} strokeDashoffset={-offset} />;
+                    offset += s.pct;
+                    return el;
+                  });
+                })()}
+              </svg>
+              <div className="donut-center">
+                <div className="donut-center-value">{fmtHrs(kpi.totalWorkingHrs)}</div>
+                <div className="donut-center-label">ชม. รวม</div>
+              </div>
+            </div>
+            <div className="donut-legend">
+              {(() => {
+                const COLORS = ['#06b6d4','#f59e0b','#10b981','#8b5cf6','#ef4444','#ec4899','#6366f1','#14b8a6'];
+                const items = kpi.perProject.map((p, i) => {
+                  const proj = (data.projects || []).find(x => x.id === p.projectId);
+                  return { name: proj ? proj.name : p.projectId, hrs: p.hrs, pct: p.pct, color: COLORS[i % COLORS.length] };
+                });
+                const nonProjectPct = kpi.totalWorkingHrs > 0 ? (kpi.nonProjectHrs / kpi.totalWorkingHrs) * 100 : 0;
+                if (kpi.nonProjectHrs > 0) items.push({ name: 'Non-Project', hrs: kpi.nonProjectHrs, pct: nonProjectPct, color: '#64748b' });
+                return items.map((it, i) => (
+                  <div key={i} className="donut-legend-item">
+                    <span className="donut-legend-dot" style={{ background: it.color }} />
+                    <span className="donut-legend-name">{it.name}</span>
+                    <span className="donut-legend-val">{fmtHrs(it.hrs)} ชม. ({fmtPct(it.pct)}%)</span>
+                  </div>
+                ));
+              })()}
+            </div>
           </div>
         </>
       )}
