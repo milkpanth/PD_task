@@ -90,6 +90,12 @@ export default function GenericModal() {
                 {(data[f.masterTable] || []).map(m => <option key={m.id} value={m.id}>{m[f.masterLabel || 'name']}</option>)}
               </select>
             )}
+            {f.type === 'profileSelect' && (
+              <select className="form-select" value={values[f.key] || ''} onChange={e => setField(f.key, e.target.value)}>
+                <option value="">— เลือก {f.label} —</option>
+                {(data.profiles || []).map(p => <option key={p.id} value={p.email.split('@')[0]}>{p.email.split('@')[0]} ({p.role})</option>)}
+              </select>
+            )}
             {f.type === 'autoId' && (
               <input type="text" className="form-input" value={values[f.key] || ''} disabled style={{ opacity: 0.7, cursor: 'not-allowed' }} />
             )}

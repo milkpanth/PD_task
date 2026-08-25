@@ -45,6 +45,10 @@ export default function GenericTable({ type, projectId }) {
             {cols.map(f => {
               const val = r[f.key] || '-';
               if (f.type === 'masterSelect') return <td key={f.key}>{masterLookups[f.key] ? masterLookups[f.key](r[f.key]) : val}</td>;
+              if (f.type === 'profileSelect') {
+                const prof = (data.profiles || []).find(p => p.email === val || p.id === val);
+                return <td key={f.key}>{prof ? prof.email.split('@')[0] : val}</td>;
+              }
               if (f.type === 'projectSelect') return <td key={f.key}>{val === '-' ? '-' : projectName(val)}</td>;
               if (f.badge === 'status') return <td key={f.key}><span className={`badge-pill ${genericStatusColor(val)}`}>{val}</span></td>;
               if (f.key === 'priority' || f.key === 'severity') return <td key={f.key}><span className={`priority-badge ${genericPriorityColor(val)}`}>{val}</span></td>;
