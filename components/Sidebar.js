@@ -55,11 +55,30 @@ export default function Sidebar() {
     });
   }
 
+  const [theme, setTheme] = useState('dark');
+
+  // Apply saved theme on mount
+  useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('pdtool-theme') || 'dark';
+      setTheme(saved);
+      if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    }
+  });
+
+  function toggleTheme() {
+    const next = theme === 'light' ? 'dark' : 'light';
+    setTheme(next);
+    document.documentElement.setAttribute('data-theme', next === 'dark' ? '' : 'light');
+    localStorage.setItem('pdtool-theme', next);
+  }
+
   return (
     <div className="sidebar">
       <div className="sidebar-logo">
         <div className="logo-icon">T</div>
         <span className="logo-text">PDTool</span>
+        <button className="theme-toggle-btn" onClick={toggleTheme} title="สลับธีม">{theme === 'light' ? '☀️' : '🌙'}</button>
       </div>
 
       {perms.canAccessOverall && (
