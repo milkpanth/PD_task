@@ -3,7 +3,7 @@ import { AuthProvider } from '../lib/AuthContext';
 import AppGate from '../components/AppGate';
 
 export const metadata = {
-  title: 'TaskFlow — Project Manager',
+  title: 'PDTool — Project Manager',
   description: 'Project, product and PD task management',
 };
 

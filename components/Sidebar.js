@@ -59,7 +59,7 @@ export default function Sidebar() {
     <div className="sidebar">
       <div className="sidebar-logo">
         <div className="logo-icon">T</div>
-        <span className="logo-text">TaskFlow</span>
+        <span className="logo-text">PDTool</span>
       </div>
 
       {perms.canAccessOverall && (
@@ -164,7 +164,7 @@ export default function Sidebar() {
             <button className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center', marginTop: 4, fontSize: 12 }} onClick={logout}>ออกจากระบบ</button>
           </div>
         )}
-        <div style={{ fontSize: 11, color: 'var(--text3)', textAlign: 'center', marginTop: 10 }}>TaskFlow v2.0 (Next.js + Supabase)</div>
+        <div style={{ fontSize: 11, color: 'var(--text3)', textAlign: 'center', marginTop: 10 }}>PDTool v2.0 (Next.js + Supabase)</div>
       </div>
       <ChangePasswordModal open={changePwOpen} onClose={() => setChangePwOpen(false)} />
     </div>
