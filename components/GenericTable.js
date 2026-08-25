@@ -10,6 +10,15 @@ export default function GenericTable({ type, projectId }) {
   const projects = data.projects || [];
   const projectName = (id) => projects.find(p => p.id === id)?.name || '-';
 
+  // Resolve master data lookups for masterSelect fields
+  const masterLookups = {};
+  schema.fields.forEach(f => {
+    if (f.type === 'masterSelect' && f.masterTable) {
+      const masterRows = data[f.masterTable] || [];
+      masterLookups[f.key] = (id) => masterRows.find(m => m.id === id)?.[f.masterLabel || 'name'] || '-';
+    }
+  });
+
   if (!rows.length) {
     return (
       <div className="empty-state">
@@ -35,6 +44,7 @@ export default function GenericTable({ type, projectId }) {
             <td>{i + 1}</td>
             {cols.map(f => {
               const val = r[f.key] || '-';
+              if (f.type === 'masterSelect') return <td key={f.key}>{masterLookups[f.key] ? masterLookups[f.key](r[f.key]) : val}</td>;
               if (f.type === 'projectSelect') return <td key={f.key}>{val === '-' ? '-' : projectName(val)}</td>;
               if (f.badge === 'status') return <td key={f.key}><span className={`badge-pill ${genericStatusColor(val)}`}>{val}</span></td>;
               if (f.key === 'priority' || f.key === 'severity') return <td key={f.key}><span className={`priority-badge ${genericPriorityColor(val)}`}>{val}</span></td>;

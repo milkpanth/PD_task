@@ -84,6 +84,12 @@ export default function GenericModal() {
                 {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             )}
+            {f.type === 'masterSelect' && (
+              <select className="form-select" value={values[f.key] || ''} onChange={e => setField(f.key, e.target.value)}>
+                <option value="">— เลือก {f.label} —</option>
+                {(data[f.masterTable] || []).map(m => <option key={m.id} value={m.id}>{m[f.masterLabel || 'name']}</option>)}
+              </select>
+            )}
             {f.type === 'autoId' && (
               <input type="text" className="form-input" value={values[f.key] || ''} disabled style={{ opacity: 0.7, cursor: 'not-allowed' }} />
             )}
@@ -94,7 +100,7 @@ export default function GenericModal() {
         ))}
       </div>
       <div className="modal-actions-split">
-        {genericModal.editId && perms.canDelete ? (
+        {genericModal.editId && (perms.canDelete || (schema.table === 'productMasters' && perms.canAccessConfig)) ? (
           <button className="btn btn-danger" onClick={() => deleteGeneric(genericModal.type, genericModal.editId)}>🗑 ลบ</button>
         ) : <div />}
         <div style={{ display: 'flex', gap: 8 }}>

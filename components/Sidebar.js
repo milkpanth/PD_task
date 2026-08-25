@@ -28,6 +28,9 @@ const ADMIN = [
 const ADMIN_SUPER = [
   { href: '/admin/log', icon: '📜', label: 'Log' },
 ];
+const CONFIG = [
+  { href: '/config/product', icon: '📦', label: 'Product Master' },
+];
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -120,7 +123,7 @@ export default function Sidebar() {
       )}
 
       {perms.canAccessAdmin && (
-        <div className="sidebar-section" style={{ flex: 1 }}>
+        <div className="sidebar-section" style={{ flex: perms.canAccessConfig ? 'unset' : 1 }}>
           <div className="sidebar-label">Admin</div>
           {ADMIN.map(item => (
             <Link key={item.href} href={item.href}>
@@ -130,6 +133,19 @@ export default function Sidebar() {
             </Link>
           ))}
           {perms.canViewLogs && ADMIN_SUPER.map(item => (
+            <Link key={item.href} href={item.href}>
+              <div className={`nav-item ${pathname === item.href ? 'active' : ''}`}>
+                <span className="icon">{item.icon}</span> {item.label}
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {perms.canAccessConfig && (
+        <div className="sidebar-section" style={{ flex: 1 }}>
+          <div className="sidebar-label">Config</div>
+          {CONFIG.map(item => (
             <Link key={item.href} href={item.href}>
               <div className={`nav-item ${pathname === item.href ? 'active' : ''}`}>
                 <span className="icon">{item.icon}</span> {item.label}

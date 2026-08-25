@@ -30,9 +30,10 @@ function RouteGuard({ children }) {
   const blockedAdmin = pathname.startsWith('/admin') && !perms.canAccessAdmin;
   const blockedLog = pathname.startsWith('/admin/log') && !perms.canViewLogs;
   const blockedPD = pathname.startsWith('/pd') && !perms.canAccessPD;
+  const blockedConfig = pathname.startsWith('/config') && !perms.canAccessConfig;
   const blockedOverall = ['/', '/projects', '/timeline', '/products', '/tasks'].includes(pathname) && !perms.canAccessOverall;
 
-  if (blockedAdmin || blockedLog || blockedPD || blockedOverall) {
+  if (blockedAdmin || blockedLog || blockedPD || blockedConfig || blockedOverall) {
     return (
       <>
         <div className="topbar"><span className="topbar-title">ไม่มีสิทธิ์เข้าถึง</span></div>
@@ -55,8 +56,10 @@ export default function AppGate({ children }) {
   if (!supabaseReady) {
     return (
       <StoreProvider>
-        <Sidebar />
-        <div className="main"><RouteGuard>{children}</RouteGuard></div>
+        <div className="app-shell">
+          <Sidebar />
+          <div className="main"><RouteGuard>{children}</RouteGuard></div>
+        </div>
         <GlobalOverlays />
       </StoreProvider>
     );
@@ -71,8 +74,10 @@ export default function AppGate({ children }) {
 
   return (
     <StoreProvider>
-      <Sidebar />
-      <div className="main"><RouteGuard>{children}</RouteGuard></div>
+      <div className="app-shell">
+        <Sidebar />
+        <div className="main"><RouteGuard>{children}</RouteGuard></div>
+      </div>
       <GlobalOverlays />
     </StoreProvider>
   );

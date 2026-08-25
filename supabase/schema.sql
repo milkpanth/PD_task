@@ -281,7 +281,7 @@ do $$
 declare t text;
 begin
   for t in select unnest(array['projects','tasks','products','devTasks','wbs',
-    'requirements','sprints','members','defects','changeLog','pdTasks','pdIssues','pdBacklog','pdFeedback','timesheets'])
+    'requirements','sprints','members','defects','changeLog','pdTasks','pdIssues','pdBacklog','pdFeedback','timesheets','productMasters'])
   loop
     execute format('alter table %I enable row level security;', t);
     execute format('drop policy if exists "allow all" on %I;', t);
@@ -403,3 +403,20 @@ create policy "activityLogs select super admin" on "activityLogs" for select usi
 -- through the app's anon/authenticated API keys. Clearing old entries (if
 -- ever needed) has to be done directly in the SQL editor.
 
+
+-- ── Product Master (Config / Master Data) ──────────────────────────
+create table if not exists "productMasters" (
+  id uuid primary key default gen_random_uuid(),
+  name text not null default '',
+  category text default '',
+  description text default '',
+  status text default 'Active',
+  "createdAt" timestamptz default now()
+);
+
+alter table "productMasters" enable row level security;
+drop policy if exists "allow all" on "productMasters";
+create policy "allow all" on "productMasters" for all using (true) with check (true);
+
+-- Add productId column to pdFeedback for linking to Product Master
+alter table "pdFeedback" add column if not exists "productId" uuid references "productMasters"(id) on delete set null;

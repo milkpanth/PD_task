@@ -25,7 +25,8 @@ input, textarea, select { font: inherit; }
     --font-display:'Sukhumvit Set','IBM Plex Sans Thai','Syne',sans-serif;
   }
   *{margin:0;padding:0;box-sizing:border-box;}
-  body{background:var(--bg);color:var(--text);font-family:var(--font-main);font-size:14px;line-height:1.5;min-height:100vh;display:flex;overflow:hidden;}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-main);font-size:14px;line-height:1.5;min-height:100vh;overflow:hidden;}
+  .app-shell{display:flex;height:100vh;overflow:hidden;}
 
   /* SIDEBAR */
   .sidebar{width:240px;min-width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;overflow-y:auto;z-index:10;}
