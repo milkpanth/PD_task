@@ -34,7 +34,8 @@ function emptyMom() {
 
 function Body() {
   const { data, addRow, updateRow, deleteRow, toast, confirm } = useStore();
-  const { session } = useAuth();
+  const { session, role } = useAuth();
+  const canDelete = ['Super Admin', 'PD Manager'].includes(role);
   const moms = useMemo(() => (data.pdMom || []).sort((a, b) => (b.meetingDate || '').localeCompare(a.meetingDate || '')), [data.pdMom]);
 
   const [selectedId, setSelectedId] = useState(null);
@@ -116,7 +117,7 @@ function Body() {
         <div className="mom-note-header">
           <span style={{ fontWeight: 700, fontSize: 14 }}>{selectedId ? '✎ แก้ไข MoM' : '📝 MoM ใหม่'}</span>
           <div style={{ display: 'flex', gap: 8 }}>
-            {selectedId && <button className="btn btn-danger" style={{ fontSize: 12 }} onClick={del}>🗑 ลบ</button>}
+            {selectedId && canDelete && <button className="btn btn-danger" style={{ fontSize: 12 }} onClick={del}>🗑 ลบ</button>}
             <button className="btn btn-primary" style={{ fontSize: 12 }} onClick={save} disabled={saving}>{saving ? 'กำลังบันทึก...' : 'บันทึก'}</button>
           </div>
         </div>
