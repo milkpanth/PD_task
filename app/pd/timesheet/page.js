@@ -38,20 +38,27 @@ export default function TimesheetPage() {
 
 function Body() {
   const { data } = useStore();
-  const { session } = useAuth();
+  const { session, role } = useAuth();
   const today = new Date();
   const [view, setView] = useState({ year: today.getFullYear(), month: today.getMonth() });
   const [selectedDate, setSelectedDate] = useState(todayISO());
   const [modalOpen, setModalOpen] = useState(false);
   const [editEntry, setEditEntry] = useState(null);
   const [viewOnly, setViewOnly] = useState(false);
+  const [viewMode, setViewMode] = useState('calendar'); // 'calendar' | 'weekly'
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [weekScope, setWeekScope] = useState('mine'); // 'mine' | 'team'
 
   const currentUserId = session?.user?.id;
+  const canViewTeam = ['Super Admin', 'CTO', 'PD Manager'].includes(role);
 
-  // Show ALL team entries (not just self) so everyone can see each other's schedule
+  // PD Team sees only their own entries; managers see everyone
   const allEntries = useMemo(
-    () => (data.timesheets || []).filter(t => t.userId),
-    [data.timesheets]
+    () => {
+      const entries = (data.timesheets || []).filter(t => t.userId);
+      return canViewTeam ? entries : entries.filter(t => t.userId === currentUserId);
+    },
+    [data.timesheets, canViewTeam, currentUserId]
   );
 
   // Build a lookup: userId → email (for display names)
@@ -92,21 +99,77 @@ function Body() {
 
   const selectedEntries = byDate[selectedDate] || [];
 
+  // Weekly view helpers
+  const weekStart = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - d.getDay() + 1 + weekOffset * 7); // Monday
+    return d;
+  }, [weekOffset]);
+
+  const weekDays = useMemo(() => {
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(weekStart);
+      d.setDate(weekStart.getDate() + i);
+      days.push({ date: d, iso: toISO(d) });
+    }
+    return days;
+  }, [weekStart]);
+
+  const weekEntries = useMemo(() => {
+    const isos = new Set(weekDays.map(d => d.iso));
+    let entries = allEntries.filter(e => isos.has(e.date));
+    if (weekScope === 'mine') entries = entries.filter(e => e.userId === currentUserId);
+    return entries;
+  }, [allEntries, weekDays, weekScope, currentUserId]);
+
+  const HOURS = [6,7,8,9,10,11,12,13,14,15,16,17,18,19,20];
+
+  function timeToMinutes(t) {
+    if (!t) return null;
+    const [h, m] = t.split(':').map(Number);
+    return h * 60 + (m || 0);
+  }
+
   return (
     <div className="project-page">
       <div className="tscal-header">
         <div className="tscal-nav">
-          <button onClick={prevMonth}>‹</button>
-          <span className="tscal-month-label">{MONTH_NAMES[view.month]} {view.year + 543}</span>
-          <button onClick={nextMonth}>›</button>
-          <button style={{ width: 'auto', padding: '0 10px', fontSize: 12 }} onClick={goToday}>วันนี้</button>
+          <div className="ts-view-tabs">
+            <span className={`filter-btn ${viewMode === 'calendar' ? 'active' : ''}`} onClick={() => setViewMode('calendar')}>📅 Calendar</span>
+            <span className={`filter-btn ${viewMode === 'weekly' ? 'active' : ''}`} onClick={() => setViewMode('weekly')}>📊 Weekly</span>
+          </div>
+          {viewMode === 'calendar' && (
+            <>
+              <button onClick={prevMonth}>‹</button>
+              <span className="tscal-month-label">{MONTH_NAMES[view.month]} {view.year + 543}</span>
+              <button onClick={nextMonth}>›</button>
+              <button style={{ width: 'auto', padding: '0 10px', fontSize: 12 }} onClick={goToday}>วันนี้</button>
+            </>
+          )}
+          {viewMode === 'weekly' && (
+            <>
+              <button onClick={() => setWeekOffset(w => w - 1)}>‹</button>
+              <span className="tscal-month-label">{weekDays[0].iso} — {weekDays[6].iso}</span>
+              <button onClick={() => setWeekOffset(w => w + 1)}>›</button>
+              <button style={{ width: 'auto', padding: '0 10px', fontSize: 12 }} onClick={() => setWeekOffset(0)}>สัปดาห์นี้</button>
+              {canViewTeam && (
+                <div className="ts-view-tabs" style={{ marginLeft: 12 }}>
+                  <span className={`filter-btn ${weekScope === 'mine' ? 'active' : ''}`} onClick={() => setWeekScope('mine')}>ของฉัน</span>
+                  <span className={`filter-btn ${weekScope === 'team' ? 'active' : ''}`} onClick={() => setWeekScope('team')}>ทั้งทีม</span>
+                </div>
+              )}
+            </>
+          )}
         </div>
         <button className="btn btn-primary" onClick={() => openAddFor(selectedDate)}>＋ บันทึกเวลา</button>
       </div>
 
-      <div className="tscal-grid">
-        {WEEKDAYS.map(w => <div key={w} className="tscal-weekday">{w}</div>)}
-        {cells.map(c => {
+      {viewMode === 'calendar' && (
+        <>
+          <div className="tscal-grid">
+            {WEEKDAYS.map(w => <div key={w} className="tscal-weekday">{w}</div>)}
+            {cells.map(c => {
           const entries = byDate[c.iso] || [];
           const isToday = c.iso === todayISO();
           const isSelected = c.iso === selectedDate;
@@ -188,6 +251,61 @@ function Body() {
           );
         })()}
       </div>
+        </>
+      )}
+
+      {viewMode === 'weekly' && (
+        <div className="ts-weekly">
+          <div className="ts-weekly-header">
+            <div className="ts-weekly-time-col"></div>
+            {weekDays.map(d => (
+              <div key={d.iso} className={`ts-weekly-day-col ${d.iso === todayISO() ? 'today' : ''}`}>
+                <div className="ts-weekly-day-name">{WEEKDAYS[d.date.getDay()]}</div>
+                <div className="ts-weekly-day-date">{d.date.getDate()}</div>
+              </div>
+            ))}
+          </div>
+          <div className="ts-weekly-body">
+            <div className="ts-weekly-grid">
+              {HOURS.map(h => (
+                <div key={h} className="ts-weekly-hour-row">
+                  <div className="ts-weekly-hour-label">{String(h).padStart(2,'0')}:00</div>
+                  {weekDays.map(d => <div key={d.iso} className="ts-weekly-cell" />)}
+                </div>
+              ))}
+              {/* Render time blocks */}
+              {weekEntries.filter(e => e.entryType !== 'leave' && e.timeIn && e.timeOut).map(e => {
+                const dayIdx = weekDays.findIndex(d => d.iso === e.date);
+                if (dayIdx < 0) return null;
+                const startMin = timeToMinutes(e.timeIn);
+                const endMin = timeToMinutes(e.timeOut);
+                if (startMin === null || endMin === null) return null;
+                const gridStartMin = HOURS[0] * 60;
+                const gridEndMin = (HOURS[HOURS.length - 1] + 1) * 60;
+                const top = ((startMin - gridStartMin) / (gridEndMin - gridStartMin)) * 100;
+                const height = ((endMin - startMin) / (gridEndMin - gridStartMin)) * 100;
+                const project = (data.projects || []).find(p => p.id === e.projectId);
+                const profile = profileMap[e.userId];
+                const ownerName = weekScope === 'team' ? shortName(profile?.email || e.userEmail) : '';
+                const isOwner = e.userId === currentUserId;
+                return (
+                  <div
+                    key={e.id}
+                    className={`ts-weekly-block ${isOwner ? 'mine' : ''}`}
+                    style={{ top: `${top}%`, height: `${Math.max(height, 2.5)}%`, left: `calc(${(dayIdx + 1) * (100 / 8)}% + 2px)`, width: `calc(${100 / 8}% - 4px)` }}
+                    onClick={() => openEntry(e)}
+                  >
+                    {ownerName && <div className="ts-block-owner">{ownerName}</div>}
+                    <div className="ts-block-time">{e.timeIn}–{e.timeOut}</div>
+                    <div className="ts-block-project">{project ? project.name : 'Non-Project'}</div>
+                    {e.workDetail && <div className="ts-block-detail">{e.workDetail}</div>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       <TimesheetModal open={modalOpen} onClose={() => setModalOpen(false)} entry={editEntry} presetDate={selectedDate} viewOnly={viewOnly} />
     </div>
