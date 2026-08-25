@@ -22,7 +22,7 @@ function emptyForm(date) {
   };
 }
 
-export default function TimesheetModal({ open, onClose, entry, presetDate, viewOnly = false }) {
+export default function TimesheetModal({ open, onClose, entry, presetDate, viewOnly = false, presetTime }) {
   const { data, addRow, updateRow, deleteRow, confirm, toast } = useStore();
   const { perms, session } = useAuth();
   const [form, setForm] = useState(emptyForm());
@@ -37,7 +37,7 @@ export default function TimesheetModal({ open, onClose, entry, presetDate, viewO
   useEffect(() => {
     if (!open) return;
     setFormErr('');
-    if (entry) {
+    if (entry && !entry._presetTime) {
       setForm({
         ...emptyForm(entry.date),
         ...entry,
@@ -46,7 +46,13 @@ export default function TimesheetModal({ open, onClose, entry, presetDate, viewO
         leaveEnd: entry.date || '',
       });
     } else {
-      setForm(emptyForm(presetDate));
+      const base = emptyForm(presetDate);
+      if (presetTime || entry?._presetTime) {
+        const pt = presetTime || entry;
+        base.timeIn = pt.timeIn || base.timeIn;
+        base.timeOut = pt.timeOut || base.timeOut;
+      }
+      setForm(base);
     }
   }, [open, entry, presetDate]);
 

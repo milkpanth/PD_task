@@ -266,48 +266,60 @@ function Body() {
             ))}
           </div>
           <div className="ts-weekly-body">
-            <div className="ts-weekly-grid">
-              {HOURS.map(h => (
-                <div key={h} className="ts-weekly-hour-row">
-                  <div className="ts-weekly-hour-label">{String(h).padStart(2,'0')}:00</div>
-                  {weekDays.map(d => <div key={d.iso} className="ts-weekly-cell" />)}
-                </div>
-              ))}
-              {/* Render time blocks */}
-              {weekEntries.filter(e => e.entryType !== 'leave' && e.timeIn && e.timeOut).map(e => {
-                const dayIdx = weekDays.findIndex(d => d.iso === e.date);
-                if (dayIdx < 0) return null;
-                const startMin = timeToMinutes(e.timeIn);
-                const endMin = timeToMinutes(e.timeOut);
-                if (startMin === null || endMin === null) return null;
-                const gridStartMin = HOURS[0] * 60;
-                const gridEndMin = (HOURS[HOURS.length - 1] + 1) * 60;
-                const top = ((startMin - gridStartMin) / (gridEndMin - gridStartMin)) * 100;
-                const height = ((endMin - startMin) / (gridEndMin - gridStartMin)) * 100;
-                const project = (data.projects || []).find(p => p.id === e.projectId);
-                const profile = profileMap[e.userId];
-                const ownerName = weekScope === 'team' ? shortName(profile?.email || e.userEmail) : '';
-                const isOwner = e.userId === currentUserId;
-                return (
+            {HOURS.map(h => (
+              <div key={h} className="ts-weekly-hour-row">
+                <div className="ts-weekly-hour-label">{String(h).padStart(2,'0')}:00</div>
+                {weekDays.map(d => (
                   <div
-                    key={e.id}
-                    className={`ts-weekly-block ${isOwner ? 'mine' : ''}`}
-                    style={{ top: `${top}%`, height: `${Math.max(height, 2.5)}%`, left: `calc(${(dayIdx + 1) * (100 / 8)}% + 2px)`, width: `calc(${100 / 8}% - 4px)` }}
-                    onClick={() => openEntry(e)}
+                    key={d.iso}
+                    className="ts-weekly-cell"
+                    onClick={() => {
+                      const timeIn = `${String(h).padStart(2,'0')}:00`;
+                      const timeOut = `${String(h + 1).padStart(2,'0')}:00`;
+                      setSelectedDate(d.iso);
+                      setEditEntry({ _presetTime: true, timeIn, timeOut });
+                      setViewOnly(false);
+                      setModalOpen(true);
+                    }}
                   >
-                    {ownerName && <div className="ts-block-owner">{ownerName}</div>}
-                    <div className="ts-block-time">{e.timeIn}–{e.timeOut}</div>
-                    <div className="ts-block-project">{project ? project.name : 'Non-Project'}</div>
-                    {e.workDetail && <div className="ts-block-detail">{e.workDetail}</div>}
+                    {/* Render blocks that start in this hour */}
+                    {weekEntries.filter(e =>
+                      e.date === d.iso && e.entryType !== 'leave' && e.timeIn &&
+                      Math.floor(timeToMinutes(e.timeIn) / 60) === h
+                    ).map(e => {
+                      const startMin = timeToMinutes(e.timeIn);
+                      const endMin = timeToMinutes(e.timeOut);
+                      const offsetMin = startMin - h * 60;
+                      const durationMin = endMin - startMin;
+                      const topPx = (offsetMin / 60) * 48;
+                      const heightPx = Math.max((durationMin / 60) * 48, 20);
+                      const project = (data.projects || []).find(p => p.id === e.projectId);
+                      const profile = profileMap[e.userId];
+                      const ownerName = weekScope === 'team' ? shortName(profile?.email || e.userEmail) : '';
+                      const isOwner = e.userId === currentUserId;
+                      return (
+                        <div
+                          key={e.id}
+                          className={`ts-weekly-block ${isOwner ? 'mine' : ''}`}
+                          style={{ top: topPx, height: heightPx }}
+                          onClick={(ev) => { ev.stopPropagation(); openEntry(e); }}
+                        >
+                          {ownerName && <div className="ts-block-owner">{ownerName}</div>}
+                          <div className="ts-block-time">{e.timeIn}–{e.timeOut}</div>
+                          <div className="ts-block-project">{project ? project.name : 'Non-Project'}</div>
+                          {e.workDetail && <div className="ts-block-detail">{e.workDetail}</div>}
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
-            </div>
+                ))}
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      <TimesheetModal open={modalOpen} onClose={() => setModalOpen(false)} entry={editEntry} presetDate={selectedDate} viewOnly={viewOnly} />
+      <TimesheetModal open={modalOpen} onClose={() => setModalOpen(false)} entry={editEntry?._presetTime ? null : editEntry} presetDate={selectedDate} viewOnly={viewOnly} presetTime={editEntry?._presetTime ? editEntry : null} />
     </div>
   );
 }
