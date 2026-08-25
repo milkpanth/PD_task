@@ -191,13 +191,13 @@ input, textarea, select { font: inherit; }
   .ts-weekly-cell{position:relative;border-bottom:1px solid var(--border);border-left:1px solid var(--border);cursor:pointer;min-height:48px;}
   .ts-weekly-cell:hover{background:var(--bg2,rgba(255,255,255,0.03));}
   .ts-weekly-block{position:absolute;left:2px;right:2px;border-radius:4px;padding:2px 5px;font-size:10px;overflow:hidden;cursor:pointer;background:rgba(6,182,212,0.12);border-left:3px solid var(--cyan);z-index:2;backdrop-filter:blur(6px);}
-  .ts-weekly-block.mine{background:rgba(99,102,241,0.14);border-left-color:var(--accent);}
+  .ts-weekly-block.mine{background:rgba(200,200,210,0.12);border-left-color:#94a3b8;}
   .ts-weekly-block:hover{background:rgba(6,182,212,0.22);}
-  .ts-weekly-block.mine:hover{background:rgba(99,102,241,0.25);}
+  .ts-weekly-block.mine:hover{background:rgba(200,200,210,0.22);}
   .ts-block-owner{font-size:9px;color:var(--text2);font-weight:600;}
   .ts-block-time{font-weight:700;font-size:10.5px;color:var(--text);}
   .ts-block-project{font-size:10px;color:var(--cyan);font-weight:500;margin-top:1px;}
-  .ts-weekly-block.mine .ts-block-project{color:var(--accent);}
+  .ts-weekly-block.mine .ts-block-project{color:#94a3b8;}
   .ts-block-detail{font-size:9.5px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
   .ts-type-tabs{display:flex;gap:8px;margin-bottom:18px;}
