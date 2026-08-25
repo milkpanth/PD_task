@@ -154,6 +154,14 @@ input, textarea, select { font: inherit; }
   .ts-detail-item-main{font-size:13px;}
   .ts-detail-item-sub{font-size:11px;color:var(--text3);margin-top:2px;}
 
+  .ts-member-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
+  .ts-member-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;}
+  .ts-member-card-header{font-size:13px;font-weight:700;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface);}
+  .ts-member-card-body{padding:8px 12px;display:flex;flex-direction:column;gap:4px;}
+  .ts-member-entry{padding:5px 6px;border-radius:6px;cursor:pointer;transition:background 0.15s;}
+  .ts-member-entry:hover{background:var(--bg2,rgba(255,255,255,0.04));}
+  .ts-entry-line{font-size:12.5px;color:var(--text);line-height:1.5;}
+
   .ts-type-tabs{display:flex;gap:8px;margin-bottom:18px;}
   .ts-type-tab{flex:1;text-align:center;padding:10px;border-radius:var(--radius-sm);border:1px solid var(--border);cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);background:var(--surface2);}
   .ts-type-tab.active.work{border-color:var(--green);color:var(--green);background:rgba(74,222,128,0.1);}

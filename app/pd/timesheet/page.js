@@ -147,33 +147,46 @@ function Body() {
         </div>
         {!selectedEntries.length ? (
           <div style={{ fontSize: 13, color: 'var(--text3)', padding: '10px 0' }}>ยังไม่มีรายการในวันนี้</div>
-        ) : selectedEntries.map(e => {
-          const project = (data.projects || []).find(p => p.id === e.projectId);
-          const profile = profileMap[e.userId];
-          const name = shortName(profile?.email || e.userEmail);
-          const isOwner = e.userId === currentUserId;
+        ) : (() => {
+          // Group entries by member
+          const grouped = {};
+          selectedEntries.forEach(e => {
+            if (!grouped[e.userId]) grouped[e.userId] = [];
+            grouped[e.userId].push(e);
+          });
           return (
-            <div key={e.id} className="ts-detail-item" style={{ cursor: 'pointer' }} onClick={() => openEntry(e)}>
-              <div style={{ flex: 1 }}>
-                <div className="ts-detail-item-owner" style={{ fontSize: 11, fontWeight: 600, color: isOwner ? 'var(--accent)' : 'var(--text2)', marginBottom: 2 }}>
-                  {name} {isOwner && <span style={{ fontSize: 10, opacity: 0.7 }}>(ฉัน)</span>}
-                </div>
-                {e.entryType === 'leave' ? (
-                  <>
-                    <div className="ts-detail-item-main">🌴 {e.leaveType}</div>
-                    {e.reason && <div className="ts-detail-item-sub">{e.reason}</div>}
-                  </>
-                ) : (
-                  <>
-                    <div className="ts-detail-item-main">🟢 {e.timeIn || '-'} – {e.timeOut || '-'} · {project ? project.name : 'Non-Project'}</div>
-                    {e.workDetail && <div className="ts-detail-item-sub">{e.workDetail}</div>}
-                  </>
-                )}
-              </div>
-              {isOwner && <button className="task-action-btn" onClick={(ev) => { ev.stopPropagation(); openEntry(e); }}>✎</button>}
+            <div className="ts-member-cards">
+              {Object.entries(grouped).map(([userId, entries]) => {
+                const profile = profileMap[userId];
+                const name = shortName(profile?.email || entries[0]?.userEmail);
+                const isOwner = userId === currentUserId;
+                return (
+                  <div key={userId} className="ts-member-card">
+                    <div className="ts-member-card-header" style={{ color: isOwner ? 'var(--accent)' : 'var(--text)' }}>
+                      {name} {isOwner && <span style={{ fontSize: 11, opacity: 0.7 }}>(ฉัน)</span>}
+                    </div>
+                    <div className="ts-member-card-body">
+                      {entries.map(e => {
+                        const project = (data.projects || []).find(p => p.id === e.projectId);
+                        return (
+                          <div key={e.id} className="ts-member-entry" style={{ cursor: 'pointer' }} onClick={() => openEntry(e)}>
+                            {e.entryType === 'leave' ? (
+                              <div className="ts-entry-line">🌴 {e.leaveType}{e.reason ? ` — ${e.reason}` : ''}</div>
+                            ) : (
+                              <div className="ts-entry-line">
+                                {e.timeIn || '-'} – {e.timeOut || '-'} {project ? project.name : 'Non-Project'}{e.workDetail ? ` ${e.workDetail}` : ''}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           );
-        })}
+        })()}
       </div>
 
       <TimesheetModal open={modalOpen} onClose={() => setModalOpen(false)} entry={editEntry} presetDate={selectedDate} viewOnly={viewOnly} />
