@@ -291,22 +291,23 @@ function Body() {
                       const endMin = timeToMinutes(e.timeOut);
                       const offsetMin = startMin - h * 60;
                       const durationMin = endMin - startMin;
-                      const topPx = (offsetMin / 60) * 48;
-                      const heightPx = Math.max((durationMin / 60) * 48, 20);
+                      const topPx = (offsetMin / 60) * 64;
+                      const heightPx = Math.max((durationMin / 60) * 64, 24);
                       const project = (data.projects || []).find(p => p.id === e.projectId);
                       const profile = profileMap[e.userId];
                       const ownerName = weekScope === 'team' ? shortName(profile?.email || e.userEmail) : '';
                       const isOwner = e.userId === currentUserId;
+                      const blockColor = project?.color || '#64748b';
                       return (
                         <div
                           key={e.id}
-                          className={`ts-weekly-block ${isOwner ? 'mine' : ''}`}
-                          style={{ top: topPx, height: heightPx }}
+                          className="ts-weekly-block"
+                          style={{ top: topPx, height: heightPx, borderLeftColor: blockColor, background: `${blockColor}20` }}
                           onClick={(ev) => { ev.stopPropagation(); openEntry(e); }}
                         >
                           {ownerName && <div className="ts-block-owner">{ownerName}</div>}
                           <div className="ts-block-time">{e.timeIn}–{e.timeOut}</div>
-                          <div className="ts-block-project">{project ? project.name : 'Non-Project'}</div>
+                          <div className="ts-block-project" style={{ color: blockColor }}>{project ? project.name : 'Non-Project'}</div>
                           {e.workDetail && <div className="ts-block-detail">{e.workDetail}</div>}
                         </div>
                       );
