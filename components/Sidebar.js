@@ -7,30 +7,30 @@ import { useAuth } from '../lib/AuthContext';
 import ChangePasswordModal from './ChangePasswordModal';
 
 const OVERALL = [
-  { href: '/', icon: '⬡', label: 'Dashboard' },
-  { href: '/projects', icon: '◈', label: 'Project Overview' },
-  { href: '/timeline', icon: '⟿', label: 'Roadmap' },
+  { href: '/', icon: '📊', label: 'Dashboard' },
+  { href: '/projects', icon: '📁', label: 'Project Overview' },
+  { href: '/timeline', icon: '🗺️', label: 'Roadmap' },
 ];
 
 const PD = [
-  { href: '/pd/dashboard', icon: '◫', label: 'Dashboard' },
-  { href: '/pd/list', icon: '☰', label: 'Task List' },
-  { href: '/pd/kanban', icon: '▤', label: 'Kanban' },
-  { href: '/pd/issuelog', icon: '⚑', label: 'Issue Log', badgeKey: 'pdIssues' },
-  { href: '/pd/backlog', icon: '▥', label: 'Backlog' },
-  { href: '/pd/feedback', icon: '✉', label: 'Product Feedback' },
+  { href: '/pd/dashboard', icon: '🏠', label: 'Dashboard' },
+  { href: '/pd/list', icon: '📋', label: 'Task List' },
+  { href: '/pd/kanban', icon: '🗂️', label: 'Kanban' },
+  { href: '/pd/issuelog', icon: '🐞', label: 'Issue Log', badgeKey: 'pdIssues' },
+  { href: '/pd/backlog', icon: '📥', label: 'Backlog' },
+  { href: '/pd/feedback', icon: '💬', label: 'Product Feedback' },
   { href: '/pd/mom', icon: '📝', label: 'MoM' },
-  { href: '/pd/timesheet', icon: '🕒', label: 'Timesheet' },
+  { href: '/pd/timesheet', icon: '⏱️', label: 'Timesheet' },
 ];
 
 const ADMIN = [
-  { href: '/admin/account', icon: '🛡️', label: 'Account' },
+  { href: '/admin/account', icon: '👤', label: 'Account' },
 ];
 const ADMIN_SUPER = [
   { href: '/admin/log', icon: '📜', label: 'Log' },
 ];
 const CONFIG = [
-  { href: '/config/product', icon: '📦', label: 'Product Master' },
+  { href: '/config/product', icon: '⚙️', label: 'Product Master' },
 ];
 
 export default function Sidebar() {
