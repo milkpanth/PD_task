@@ -2,11 +2,12 @@
 import { useStore } from '../lib/StoreContext';
 import { SCHEMAS, genericStatusColor, genericPriorityColor } from '../lib/schemas';
 
-export default function GenericTable({ type, projectId }) {
+export default function GenericTable({ type, projectId, filterFn }) {
   const { data, openGenericEdit } = useStore();
   const schema = SCHEMAS[type];
   const all = data[schema.table] || [];
-  const rows = schema.global ? all : all.filter(r => r.project === projectId);
+  let rows = schema.global ? all : all.filter(r => r.project === projectId);
+  if (filterFn) rows = rows.filter(filterFn);
   const projects = data.projects || [];
   const projectName = (id) => projects.find(p => p.id === id)?.name || '-';
 

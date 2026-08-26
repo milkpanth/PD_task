@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../../../lib/StoreContext';
+import { useAuth } from '../../../lib/AuthContext';
 import DataGate from '../../../components/DataGate';
 import { genericPriorityColor } from '../../../lib/schemas';
 
@@ -34,7 +35,41 @@ function groupByStatus(tasks) {
 
 function Body() {
   const { data, openGenericAdd, openGenericEdit, updateRow } = useStore();
-  const tasks = data.pdTasks;
+  const { session } = useAuth();
+  const [filterMine, setFilterMine] = useState(false);
+  const [dateMode, setDateMode] = useState('week'); // 'week' | 'all' | 'custom'
+
+  function getWeekRange() {
+    const now = new Date();
+    const day = now.getDay();
+    const mon = new Date(now);
+    mon.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
+    const sun = new Date(mon);
+    sun.setDate(mon.getDate() + 6);
+    const toISO = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    return { start: toISO(mon), end: toISO(sun) };
+  }
+  const week = getWeekRange();
+  const [customStart, setCustomStart] = useState(week.start);
+  const [customEnd, setCustomEnd] = useState(week.end);
+
+  const myName = session?.user?.email?.split('@')[0]?.toLowerCase() || '';
+  const myId = session?.user?.id || '';
+  const allTasks = data.pdTasks || [];
+
+  const tasks = allTasks.filter(t => {
+    if (filterMine) {
+      const a = (t.assignee || '').toLowerCase();
+      if (a !== myName && t.userId !== myId) return false;
+    }
+    if (dateMode === 'all') return true;
+    const rangeStart = dateMode === 'week' ? week.start : customStart;
+    const rangeEnd = dateMode === 'week' ? week.end : customEnd;
+    if (!t.startDate && !t.endDate) return true;
+    const tStart = t.startDate || t.endDate;
+    const tEnd = t.endDate || t.startDate;
+    return tStart <= rangeEnd && tEnd >= rangeStart;
+  });
 
   const [cols, setCols] = useState(() => groupByStatus(tasks));
   const dragRef = useRef(null); // { id }
@@ -132,9 +167,29 @@ function Body() {
 
   return (
     <div className="timeline-page">
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 18 }}>Kanban</div>
-        <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>To do → In Progress → In Review → Done · ลากการ์ดเพื่อย้ายสถานะหรือจัดเรียงลำดับ</div>
+      <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+        <div>
+          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 18 }}>Kanban</div>
+          <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>ลากการ์ดเพื่อย้ายสถานะ · แสดง task สัปดาห์นี้ + ที่ยังไม่ใส่วันที่</div>
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="ts-view-tabs">
+            <span className={`filter-btn ${!filterMine ? 'active' : ''}`} onClick={() => setFilterMine(false)}>ทั้งหมด</span>
+            <span className={`filter-btn ${filterMine ? 'active' : ''}`} onClick={() => setFilterMine(true)}>ของฉัน</span>
+          </div>
+          <div className="ts-view-tabs">
+            <span className={`filter-btn ${dateMode === 'week' ? 'active' : ''}`} onClick={() => setDateMode('week')}>สัปดาห์นี้</span>
+            <span className={`filter-btn ${dateMode === 'all' ? 'active' : ''}`} onClick={() => setDateMode('all')}>ทั้งปี</span>
+            <span className={`filter-btn ${dateMode === 'custom' ? 'active' : ''}`} onClick={() => setDateMode('custom')}>กำหนดเอง</span>
+          </div>
+          {dateMode === 'custom' && (
+            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+              <input type="date" className="form-input" style={{ fontSize: 11, padding: '2px 6px', width: 130 }} value={customStart} onChange={e => setCustomStart(e.target.value)} />
+              <span style={{ fontSize: 11, color: 'var(--text3)' }}>—</span>
+              <input type="date" className="form-input" style={{ fontSize: 11, padding: '2px 6px', width: 130 }} value={customEnd} onChange={e => setCustomEnd(e.target.value)} />
+            </div>
+          )}
+        </div>
       </div>
       <div className="pdk-board">
         {COLS.map(col => {
@@ -162,10 +217,13 @@ function Body() {
                     onDragEnd={handleDragEnd}
                     onClick={() => openGenericEdit('pdtask', t.id)}
                   >
-                    <div className="pdk-card-title">{t.title || '(ไม่มีชื่อ)'}</div>
-                    <div className="pdk-card-tags">
-                      {t.assignee && <span className="tag" style={{ background: 'var(--surface3)', color: 'var(--text2)' }}>{t.assignee}</span>}
+                    <div className="pdk-card-header">
+                      <div className="pdk-card-title">{t.title || '(ไม่มีชื่อ)'}</div>
                       <span className={`priority-badge ${genericPriorityColor(t.priority)}`}>{(t.priority || 'Low').toUpperCase()}</span>
+                    </div>
+                    <div className="pdk-card-footer">
+                      <span className="pdk-card-date">{t.startDate || ''}{t.startDate && t.endDate ? ' — ' : ''}{t.endDate || ''}</span>
+                      {t.assignee && <span className="pdk-card-assignee">{t.assignee}</span>}
                     </div>
                   </div>
                 ))}
