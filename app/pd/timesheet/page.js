@@ -270,79 +270,56 @@ function Body() {
               <div key={h} className="ts-weekly-hour-row">
                 <div className="ts-weekly-hour-label">{String(h).padStart(2,'0')}:00</div>
                 {weekDays.map(d => {
-                  const cellEntries = weekEntries.filter(e =>
-                    e.date === d.iso && e.entryType !== 'leave' && e.timeIn &&
-                    Math.floor(timeToMinutes(e.timeIn) / 60) === h
+                  // All entries for this day to calculate overlap columns
+                  const dayEntries = weekEntries.filter(e =>
+                    e.date === d.iso && e.entryType !== 'leave' && e.timeIn && e.timeOut
                   );
-                  // In team mode: group entries by user into lanes (max 3)
-                  const isTeam = weekScope === 'team' && canViewTeam;
-                  // Get unique users for this day (across all hours) to assign stable lanes
-                  const dayUsers = [...new Set(weekEntries.filter(e => e.date === d.iso && e.userId).map(e => e.userId))].slice(0, 3);
+                  const sorted = [...dayEntries].sort((a, b) => timeToMinutes(a.timeIn) - timeToMinutes(b.timeIn));
+                  const cols = [];
+                  const layoutMap = new Map();
+                  sorted.forEach(e => {
+                    const start = timeToMinutes(e.timeIn);
+                    const end = timeToMinutes(e.timeOut);
+                    let placed = false;
+                    for (let c = 0; c < cols.length; c++) {
+                      if (cols[c] <= start) { cols[c] = end; layoutMap.set(e.id, c); placed = true; break; }
+                    }
+                    if (!placed) { layoutMap.set(e.id, cols.length); cols.push(end); }
+                  });
+                  const totalCols = Math.max(cols.length, 1);
+                  const cellEntries = dayEntries.filter(e => Math.floor(timeToMinutes(e.timeIn) / 60) === h);
 
                   return (
-                    <div
-                      key={d.iso}
-                      className={`ts-weekly-cell ${isTeam ? 'team-lanes' : ''}`}
-                      onClick={() => {
-                        const timeIn = `${String(h).padStart(2,'0')}:00`;
-                        const timeOut = `${String(h + 1).padStart(2,'0')}:00`;
-                        setSelectedDate(d.iso);
-                        setEditEntry({ _presetTime: true, timeIn, timeOut });
-                        setViewOnly(false);
-                        setModalOpen(true);
-                      }}
-                    >
-                      {isTeam ? (
-                        // 3 lanes side by side
-                        dayUsers.map((uid, laneIdx) => {
-                          const laneEntries = cellEntries.filter(e => e.userId === uid);
-                          const profile = profileMap[uid];
-                          const ownerInitial = shortName(profile?.email || '').charAt(0);
-                          return (
-                            <div key={uid} className="ts-lane">
-                              {laneEntries.map(e => {
-                                const project = (data.projects || []).find(p => p.id === e.projectId);
-                                const blockColor = project?.color || '#64748b';
-                                return (
-                                  <div
-                                    key={e.id}
-                                    className="ts-weekly-block"
-                                    style={{ borderLeftColor: blockColor, background: `${blockColor}20` }}
-                                    onClick={(ev) => { ev.stopPropagation(); openEntry(e); }}
-                                    title={`${shortName(profile?.email || e.userEmail)} ${e.timeIn}–${e.timeOut} ${project?.name || 'Non-Project'} ${e.workDetail || ''}`}
-                                  >
-                                    <div className="ts-block-line">
-                                      <span className="ts-block-owner">{ownerInitial}</span>
-                                      <span className="ts-block-time">{e.timeIn}–{e.timeOut}</span>
-                                    </div>
-                                    {e.workDetail && <div className="ts-block-detail">{e.workDetail}</div>}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          );
-                        })
-                      ) : (
-                        // Single user mode: full width
-                        cellEntries.map(e => {
-                          const project = (data.projects || []).find(p => p.id === e.projectId);
-                          const blockColor = project?.color || '#64748b';
-                          return (
-                            <div
-                              key={e.id}
-                              className="ts-weekly-block"
-                              style={{ borderLeftColor: blockColor, background: `${blockColor}20` }}
-                              onClick={(ev) => { ev.stopPropagation(); openEntry(e); }}
-                            >
-                              <div className="ts-block-line">
-                                <span className="ts-block-time">{e.timeIn}–{e.timeOut}</span>
-                                <span className="ts-block-project" style={{ color: blockColor }}>{project ? project.name : 'Non-Project'}</span>
-                              </div>
-                              {e.workDetail && <div className="ts-block-detail">{e.workDetail}</div>}
-                            </div>
-                          );
-                        })
-                      )}
+                    <div key={d.iso} className="ts-weekly-cell" onClick={() => {
+                      setSelectedDate(d.iso);
+                      setEditEntry({ _presetTime: true, timeIn: `${String(h).padStart(2,'0')}:00`, timeOut: `${String(h+1).padStart(2,'0')}:00` });
+                      setViewOnly(false); setModalOpen(true);
+                    }}>
+                      {cellEntries.map(e => {
+                        const startMin = timeToMinutes(e.timeIn);
+                        const endMin = timeToMinutes(e.timeOut);
+                        const topPx = ((startMin - h * 60) / 60) * 80;
+                        const heightPx = Math.max(((endMin - startMin) / 60) * 80, 28);
+                        const project = (data.projects || []).find(p => p.id === e.projectId);
+                        const profile = profileMap[e.userId];
+                        const ownerName = weekScope === 'team' ? shortName(profile?.email || e.userEmail) : '';
+                        const blockColor = project?.color || '#64748b';
+                        const col = layoutMap.get(e.id) || 0;
+                        const wPct = 100 / totalCols;
+                        const lPct = col * wPct;
+                        return (
+                          <div key={e.id} className="ts-weekly-block" style={{
+                            top: topPx, height: heightPx,
+                            left: `${lPct}%`, width: `calc(${wPct}% - 2px)`,
+                            borderLeftColor: blockColor, background: `${blockColor}22`,
+                          }} onClick={(ev) => { ev.stopPropagation(); openEntry(e); }}
+                            title={`${ownerName} ${e.timeIn}–${e.timeOut} ${project?.name || 'Non-Project'} ${e.workDetail || ''}`}>
+                            {ownerName && <div className="ts-block-owner">{ownerName}</div>}
+                            <div className="ts-block-project" style={{ color: blockColor }}>{project?.name || 'Non-Project'}</div>
+                            {e.workDetail && <div className="ts-block-detail">{e.workDetail}</div>}
+                          </div>
+                        );
+                      })}
                     </div>
                   );
                 })}
