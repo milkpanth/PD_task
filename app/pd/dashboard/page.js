@@ -27,14 +27,15 @@ function hoursBetween(timeIn, timeOut) {
   return mins / 60;
 }
 
-// All Mon–Fri ISO dates in a given month.
-function workingDaysInMonth(year, month) {
+// All Mon–Fri ISO dates in a given month, excluding holidays.
+function workingDaysInMonth(year, month, holidaySet) {
   const lastDay = new Date(year, month + 1, 0).getDate();
   const out = [];
   for (let d = 1; d <= lastDay; d++) {
     const dt = new Date(year, month, d);
     const wd = dt.getDay();
-    if (wd !== 0 && wd !== 6) out.push(toISO(dt));
+    const iso = toISO(dt);
+    if (wd !== 0 && wd !== 6 && !holidaySet.has(iso)) out.push(iso);
   }
   return out;
 }
@@ -94,7 +95,8 @@ function Body() {
     // Only count working days that have already happened, so a partial or
     // future month doesn't get penalized with an artificially low % / missing count.
     const todayIso = todayISO();
-    const elapsedWorkingDays = workingDaysInMonth(year, month).filter(iso => iso <= todayIso);
+    const holidaySet = new Set((data.holidays || []).map(h => h.date));
+    const elapsedWorkingDays = workingDaysInMonth(year, month, holidaySet).filter(iso => iso <= todayIso);
     const capacityHrs = pdEmployees.length * elapsedWorkingDays.length * WORK_DAY_HOURS;
     const utilization = capacityHrs > 0 ? (totalWorkingHrs / capacityHrs) * 100 : 0;
 
@@ -127,7 +129,7 @@ function Body() {
       utilization, leaveHrs, missingTimesheet, pdEmployeeCount: pdEmployees.length,
       elapsedWorkingDaysCount: elapsedWorkingDays.length, perEmployee, perProject,
     };
-  }, [data.timesheets, data.profiles, view]);
+  }, [data.timesheets, data.profiles, data.holidays, view]);
 
   const total = pdTasks.length, done = pdTasks.filter(t => t.status === 'Done').length;
   const openIssues = pdIssues.filter(i => !['Resolved', 'Closed'].includes(i.status)).length;
