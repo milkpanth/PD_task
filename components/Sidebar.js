@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useStore } from '../lib/StoreContext';
@@ -59,13 +59,11 @@ export default function Sidebar() {
   const [theme, setTheme] = useState('dark');
 
   // Apply saved theme on mount
-  useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('pdtool-theme') || 'dark';
-      setTheme(saved);
-      if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
-    }
-  });
+  useEffect(() => {
+    const saved = localStorage.getItem('pdtool-theme') || 'dark';
+    setTheme(saved);
+    if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
+  }, []);
 
   function toggleTheme() {
     const next = theme === 'light' ? 'dark' : 'light';
