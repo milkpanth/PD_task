@@ -39,6 +39,7 @@ export default function Sidebar() {
   const { data, confirm, deleteRow, toast } = useStore();
   const { perms, assignedProjectIds, role, session, logout } = useAuth();
   const [changePwOpen, setChangePwOpen] = useState(false);
+  const [projectsOpen, setProjectsOpen] = useState(true);
   const allProjects = data.projects || [];
   const projects = perms.projectScope === 'all'
     ? allProjects
@@ -94,7 +95,11 @@ export default function Sidebar() {
       )}
 
       <div className="sidebar-section">
-        <div className="sidebar-label">Project</div>
+        <div className="sidebar-label sidebar-label-toggle" onClick={() => setProjectsOpen(v => !v)}>
+          <span>Project</span>
+          <span className={`sidebar-arrow ${projectsOpen ? 'open' : ''}`}>▸</span>
+        </div>
+        {projectsOpen && (<>
         <div className="project-list">
           {!projects.length && (
             <div style={{ padding: '4px 10px', fontSize: 12, color: 'var(--text3)' }}>
@@ -123,6 +128,8 @@ export default function Sidebar() {
           <Link href="/projects">
             <div className="add-project-btn"><span>＋</span> New Project</div>
           </Link>
+        )}
+        </>
         )}
       </div>
 

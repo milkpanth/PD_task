@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../../../lib/StoreContext';
 import { useAuth } from '../../../lib/AuthContext';
 import DataGate from '../../../components/DataGate';
@@ -57,7 +57,7 @@ function Body() {
   const myId = session?.user?.id || '';
   const allTasks = data.pdTasks || [];
 
-  const tasks = allTasks.filter(t => {
+  const tasks = useMemo(() => allTasks.filter(t => {
     if (filterMine) {
       const a = (t.assignee || '').toLowerCase();
       if (a !== myName && t.userId !== myId) return false;
@@ -69,7 +69,7 @@ function Body() {
     const tStart = t.startDate || t.endDate;
     const tEnd = t.endDate || t.startDate;
     return tStart <= rangeEnd && tEnd >= rangeStart;
-  });
+  }), [allTasks, filterMine, dateMode, customStart, customEnd, myName, myId, week.start, week.end]);
 
   const [cols, setCols] = useState(() => groupByStatus(tasks));
   const dragRef = useRef(null); // { id }
