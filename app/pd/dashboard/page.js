@@ -286,6 +286,50 @@ function Body() {
         </>
       )}
 
+      {/* Kanban Summary per person */}
+      <div className="dash-section-title">Kanban สรุปรายบุคคล — {MONTH_NAMES[view.month]} {view.year + 543}</div>
+      {(() => {
+        const { year, month } = view;
+        const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+        const statuses = ['To do', 'In Progress', 'In Review', 'Done'];
+        // Get unique assignees
+        const assignees = [...new Set(pdTasks.map(t => t.assignee).filter(Boolean))];
+        if (!assignees.length) return <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 24 }}>ยังไม่มี task ที่ assign</div>;
+        return (
+          <div className="devtask-scroll" style={{ marginBottom: 24 }}>
+            <table className="devtask-table">
+              <thead>
+                <tr>
+                  <th>Assignee</th>
+                  {statuses.map(s => <th key={s}>{s}</th>)}
+                  <th>รวม</th>
+                  <th>สำเร็จเดือนนี้</th>
+                </tr>
+              </thead>
+              <tbody>
+                {assignees.map(name => {
+                  const myTasks = pdTasks.filter(t => t.assignee === name);
+                  const counts = {};
+                  statuses.forEach(s => { counts[s] = myTasks.filter(t => t.status === s).length; });
+                  // Done this month: doneAt timestamp falls in selected month
+                  const doneThisMonth = myTasks.filter(t =>
+                    t.status === 'Done' && t.doneAt && t.doneAt.slice(0, 7) === monthKey
+                  ).length;
+                  return (
+                    <tr key={name}>
+                      <td>{name}</td>
+                      {statuses.map(s => <td key={s}>{counts[s] || 0}</td>)}
+                      <td style={{ fontWeight: 600 }}>{myTasks.length}</td>
+                      <td><span className="badge-pill status-donedt">{doneThisMonth}</span></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        );
+      })()}
+
     </div>
   );
 }

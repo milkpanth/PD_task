@@ -141,7 +141,14 @@ function Body() {
       cols[colStatus].forEach((t, idx) => {
         const newOrder = idx * 10;
         if (t.status !== colStatus || (t.order ?? 0) !== newOrder) {
-          updates.push({ id: t.id, patch: { status: colStatus, order: newOrder } });
+          const patch = { status: colStatus, order: newOrder };
+          // Track doneAt: set when moving TO Done, clear when moving AWAY
+          if (colStatus === 'Done' && t.status !== 'Done') {
+            patch.doneAt = new Date().toISOString();
+          } else if (colStatus !== 'Done' && t.status === 'Done') {
+            patch.doneAt = null;
+          }
+          updates.push({ id: t.id, patch });
         }
       });
     });
