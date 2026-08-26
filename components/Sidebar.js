@@ -16,11 +16,11 @@ const PD = [
   { href: '/pd/dashboard', icon: '🏠', label: 'Dashboard' },
   { href: '/pd/list', icon: '📋', label: 'Task List' },
   { href: '/pd/kanban', icon: '🗂️', label: 'Kanban' },
+  { href: '/pd/timesheet', icon: '⏱️', label: 'Timesheet' },
   { href: '/pd/issuelog', icon: '🐞', label: 'Issue Log', badgeKey: 'pdIssues' },
   { href: '/pd/backlog', icon: '📥', label: 'Backlog' },
   { href: '/pd/feedback', icon: '💬', label: 'Product Feedback' },
   { href: '/pd/mom', icon: '📝', label: 'MoM' },
-  { href: '/pd/timesheet', icon: '⏱️', label: 'Timesheet' },
 ];
 
 const ADMIN = [
@@ -40,6 +40,10 @@ export default function Sidebar() {
   const { perms, assignedProjectIds, role, session, logout } = useAuth();
   const [changePwOpen, setChangePwOpen] = useState(false);
   const [projectsOpen, setProjectsOpen] = useState(true);
+  const [overallOpen, setOverallOpen] = useState(true);
+  const [pdOpen, setPdOpen] = useState(true);
+  const [adminOpen, setAdminOpen] = useState(true);
+  const [configOpen, setConfigOpen] = useState(true);
   const allProjects = data.projects || [];
   const projects = perms.projectScope === 'all'
     ? allProjects
@@ -81,10 +85,30 @@ export default function Sidebar() {
         <button className="theme-toggle-btn" onClick={toggleTheme} title="สลับธีม">{theme === 'light' ? '☀️' : '🌙'}</button>
       </div>
 
+      {perms.canAccessPD && (
+        <div className="sidebar-section" style={{ flex: perms.canAccessAdmin ? 'unset' : 1 }}>
+          <div className="sidebar-label sidebar-label-toggle" onClick={() => setPdOpen(v => !v)}>
+            <span>PD Task</span>
+            <span className={`sidebar-arrow ${pdOpen ? 'open' : ''}`}>▸</span>
+          </div>
+          {pdOpen && PD.map(item => (
+            <Link key={item.href} href={item.href}>
+              <div className={`nav-item ${pathname === item.href ? 'active' : ''}`}>
+                <span className="icon">{item.icon}</span> {item.label}
+                {item.badgeKey && <span className="badge">{openIssues}</span>}
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+
       {perms.canAccessOverall && (
         <div className="sidebar-section">
-          <div className="sidebar-label">Overall</div>
-          {OVERALL.map(item => (
+          <div className="sidebar-label sidebar-label-toggle" onClick={() => setOverallOpen(v => !v)}>
+            <span>Overall</span>
+            <span className={`sidebar-arrow ${overallOpen ? 'open' : ''}`}>▸</span>
+          </div>
+          {overallOpen && OVERALL.map(item => (
             <Link key={item.href} href={item.href}>
               <div className={`nav-item ${pathname === item.href ? 'active' : ''}`}>
                 <span className="icon">{item.icon}</span> {item.label}
@@ -133,23 +157,13 @@ export default function Sidebar() {
         )}
       </div>
 
-      {perms.canAccessPD && (
-        <div className="sidebar-section" style={{ flex: perms.canAccessAdmin ? 'unset' : 1 }}>
-          <div className="sidebar-label">PD Task</div>
-          {PD.map(item => (
-            <Link key={item.href} href={item.href}>
-              <div className={`nav-item ${pathname === item.href ? 'active' : ''}`}>
-                <span className="icon">{item.icon}</span> {item.label}
-                {item.badgeKey && <span className="badge">{openIssues}</span>}
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
-
       {perms.canAccessAdmin && (
         <div className="sidebar-section" style={{ flex: perms.canAccessConfig ? 'unset' : 1 }}>
-          <div className="sidebar-label">Admin</div>
+          <div className="sidebar-label sidebar-label-toggle" onClick={() => setAdminOpen(v => !v)}>
+            <span>Admin</span>
+            <span className={`sidebar-arrow ${adminOpen ? 'open' : ''}`}>▸</span>
+          </div>
+          {adminOpen && (<>
           {ADMIN.map(item => (
             <Link key={item.href} href={item.href}>
               <div className={`nav-item ${pathname === item.href ? 'active' : ''}`}>
@@ -164,13 +178,17 @@ export default function Sidebar() {
               </div>
             </Link>
           ))}
+          </>)}
         </div>
       )}
 
       {perms.canAccessConfig && (
         <div className="sidebar-section" style={{ flex: 1 }}>
-          <div className="sidebar-label">Config</div>
-          {CONFIG.map(item => (
+          <div className="sidebar-label sidebar-label-toggle" onClick={() => setConfigOpen(v => !v)}>
+            <span>Config</span>
+            <span className={`sidebar-arrow ${configOpen ? 'open' : ''}`}>▸</span>
+          </div>
+          {configOpen && CONFIG.map(item => (
             <Link key={item.href} href={item.href}>
               <div className={`nav-item ${pathname === item.href ? 'active' : ''}`}>
                 <span className="icon">{item.icon}</span> {item.label}
