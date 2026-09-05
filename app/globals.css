@@ -238,6 +238,7 @@ input, textarea, select { font: inherit; }
   .task-date.overdue{color:var(--red);}
   .task-right{display:flex;align-items:center;gap:8px;}
   .priority-badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;text-transform:uppercase;letter-spacing:0.5px;}
+  .p-critical{background:var(--red);color:#fff;}
   .p-high{background:rgba(226,67,76,0.15);color:var(--red);}
   .p-med{background:rgba(250,204,21,0.15);color:var(--yellow);}
   .p-low{background:rgba(74,222,128,0.15);color:var(--green);}
